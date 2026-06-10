@@ -279,8 +279,6 @@ module "aspect_type_asset_reliability_trust" {
   depends_on = [module.dataplex_iam]
 }
 
-# ─── DATA SCANS ────────────────────────────────────────────────────────────────
-
 module "profiling_scan_raw" {
   source           = "../../custom_modules/dataplex_datascan"
   project_id       = var.project_id
