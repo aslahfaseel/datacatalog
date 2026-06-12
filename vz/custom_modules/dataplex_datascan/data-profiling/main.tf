@@ -1,5 +1,3 @@
-# Data Profiling Scan Module
-# Registry: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dataplex_datascan
 
 resource "google_dataplex_datascan" "profiling" {
   project      = var.project_id
@@ -29,8 +27,9 @@ resource "google_dataplex_datascan" "profiling" {
   }
 
   data_profile_spec {
-    sampling_percent = var.sampling_percent
-    row_filter       = var.row_filter
+    sampling_percent           = var.sampling_percent
+    row_filter                 = var.row_filter
+    catalog_publishing_enabled = true
 
     post_scan_actions {
       bigquery_export {

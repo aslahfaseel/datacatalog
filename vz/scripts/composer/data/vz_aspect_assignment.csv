@@ -1,0 +1,5 @@
+project_id,location,entry_group,dataset_id,asset_id,exclude_asset_id,aspect_type_id,owner,domain,lifecycle
+dmgcp-del-181,us-central1,@bigquery,vzdataset,raw,,vz-asset-governance,Telecom Analytics Team,network,active
+dmgcp-del-181,us-central1,@bigquery,vzdataset,raw_order,,vz-asset-governance,Sales Analytics Team,sales,active
+dmgcp-del-181,us-central1,@bigquery,vzdataset,raw_customer,,vz-asset-governance,CRM Team,customer,active
+dmgcp-del-181,us-central1,@bigquery,vzdataset,financial_metrics,,vz-asset-governance,Finance Team,finance,active

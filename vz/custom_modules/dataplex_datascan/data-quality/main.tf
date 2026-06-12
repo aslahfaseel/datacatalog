@@ -1,6 +1,3 @@
-# Data Quality Scan Module
-# Registry: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dataplex_datascan
-
 resource "google_dataplex_datascan" "quality" {
   project      = var.project_id
   location     = var.location
@@ -29,8 +26,9 @@ resource "google_dataplex_datascan" "quality" {
   }
 
   data_quality_spec {
-    sampling_percent = var.sampling_percent
-    row_filter       = var.row_filter
+    sampling_percent           = var.sampling_percent
+    row_filter                 = var.row_filter
+    catalog_publishing_enabled = true
 
     dynamic "rules" {
       for_each = var.dq_rules
