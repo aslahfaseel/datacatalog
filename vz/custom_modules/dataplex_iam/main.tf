@@ -22,6 +22,12 @@ resource "google_project_iam_member" "terraform_bq_metadata_viewer" {
   member  = "serviceAccount:${var.terraform_sa}"
 }
 
+resource "google_project_iam_member" "terraform_sa_user" {
+  project = var.project_id
+  role    = "roles/iam.serviceAccountUser"
+  member  = "serviceAccount:${var.terraform_sa}"
+}
+
 resource "google_project_iam_member" "dataplex_bq_viewer" {
   project = var.project_id
   role    = "roles/bigquery.dataViewer"
