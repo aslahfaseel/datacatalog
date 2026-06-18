@@ -38,3 +38,16 @@ variable "dq_profile_scans" {
   }))
   default = {}
 }
+
+# Cloud Run Aspect Patcher variables
+variable "aspect_patcher_image" {
+  description = "The full Docker image URI for the Cloud Run aspect patcher job (e.g. gcr.io/project/vz-aspect-patcher:latest)."
+  type        = string
+  default     = "python:3.11-slim"
+}
+
+variable "aspect_patcher_gcs_bucket" {
+  description = "The GCS bucket name where the vz_aspect_assignment.csv file is stored."
+  type        = string
+  default     = "vz-datacatalog"
+}

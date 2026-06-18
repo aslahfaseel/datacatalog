@@ -28,6 +28,20 @@ resource "google_project_iam_member" "terraform_sa_user" {
   member  = "serviceAccount:${var.terraform_sa}"
 }
 
+# Required for Cloud Run Job creation
+resource "google_project_iam_member" "terraform_run_developer" {
+  project = var.project_id
+  role    = "roles/run.developer"
+  member  = "serviceAccount:${var.terraform_sa}"
+}
+
+# Required for Cloud Scheduler job creation
+resource "google_project_iam_member" "terraform_scheduler_admin" {
+  project = var.project_id
+  role    = "roles/cloudscheduler.admin"
+  member  = "serviceAccount:${var.terraform_sa}"
+}
+
 resource "google_project_iam_member" "dataplex_bq_viewer" {
   project = var.project_id
   role    = "roles/bigquery.dataViewer"

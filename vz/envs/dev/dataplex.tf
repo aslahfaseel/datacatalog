@@ -240,3 +240,28 @@ resource "google_dataplex_datascan" "dq_from_profile" {
 
   depends_on = [module.dataplex_iam]
 }
+
+module "sensitive_data_protection" {
+  source = "../../custom_modules/dataplex_sdp"
+
+  # ---------------------------------------------------------
+  # DETAILS YOU MUST UPDATE:
+  # ---------------------------------------------------------
+  
+  # 1. Update this to your actual GCP Project ID where BigQuery lives
+  project_id = var.project_id
+  
+  # 2. DLP Discovery Configs must be in the multi-region 'us' location — do not change this
+  location   = "us"
+  
+  # 3. (Optional) Customize the sensitive data types you want to find.
+  # If you don't include this block, it will use the default list from variables.tf
+  info_types = [
+    "EMAIL_ADDRESS",
+    "CREDIT_CARD_NUMBER",
+    "US_SOCIAL_SECURITY_NUMBER",
+    "PERSON_NAME",
+    "PHONE_NUMBER",
+    "GCP_CREDENTIALS"
+  ]
+}
