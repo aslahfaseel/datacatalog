@@ -49,17 +49,6 @@ resource "google_cloud_run_v2_job" "aspect_patcher" {
   }
 }
 
-# NOTE: Cloud Scheduler is NOT managed here because cloudscheduler.admin
-# permission is not available. To trigger this job manually, use:
-#   gcloud run jobs execute vz-aspect-patcher --region=us-central1
-# Or trigger on demand from the Cloud Run Jobs page in the GCP Console.
-
-# NOTE: GCS bucket IAM for 'vz-datacatalog' bucket must be granted manually
-# by the GCS bucket owner team. Ask them to run:
-#   gcloud storage buckets add-iam-policy-binding gs://vz-datacatalog \
-#     --member="serviceAccount:vz-datacatalog@dmgcp-del-181.iam.gserviceaccount.com" \
-#     --role="roles/storage.objectViewer"
-
 resource "google_project_iam_member" "scheduler_run_invoker" {
   project = var.project_id
   role    = "roles/run.invoker"
