@@ -9,12 +9,7 @@ locals {
   }
 }
 
-module "dataplex_iam" {
-  source                 = "../../custom_modules/dataplex_iam"
-  project_id             = var.project_id
-  terraform_sa           = var.terraform_sa
-  dataplex_service_agent = var.dataplex_service_agent
-}
+
 
 module "aspect_type_asset_governance" {
   source         = "../../custom_modules/dataplex_aspect_type"
@@ -67,8 +62,8 @@ module "aspect_type_asset_governance" {
     ]
   })
 
-  depends_on = [module.dataplex_iam]
 }
+
 
 module "profiling_scan_raw" {
   source           = "../../custom_modules/dataplex_datascan/data-profiling"
@@ -82,8 +77,8 @@ module "profiling_scan_raw" {
   results_bq_table = local.profile_results_table
   schedule_cron    = "0 0 * * *"
   sampling_percent = 100.0
-  depends_on       = [module.dataplex_iam]
 }
+
 
 module "dq_scan_raw" {
   source           = "../../custom_modules/dataplex_datascan/data-quality"
@@ -104,10 +99,16 @@ module "dq_scan_raw" {
       threshold         = 1.0
       column            = "id"
       row_condition_sql = "id IS NOT NULL"
+    },
+
+ {
+      name                 = "raw-table-has-data"
+      dimension            = "COMPLETENESS"
+      table_condition_sql  = "COUNT(*) > 0"
     }
   ]
-  depends_on = [module.dataplex_iam]
 }
+
 
 data "google_client_config" "default" {}
 
@@ -238,17 +239,11 @@ resource "google_dataplex_datascan" "dq_from_profile" {
     }
   }
 
-  depends_on = [module.dataplex_iam]
 }
 
 module "sensitive_data_protection" {
   source = "../../custom_modules/dataplex_sdp"
 
-  # ---------------------------------------------------------
-  # DETAILS YOU MUST UPDATE:
-  # ---------------------------------------------------------
-  
-  # 1. Update this to your actual GCP Project ID where BigQuery lives
   project_id = var.project_id
   
   # 2. DLP Discovery Configs must be in the multi-region 'us' location — do not change this

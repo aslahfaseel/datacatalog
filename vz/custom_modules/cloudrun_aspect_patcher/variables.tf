@@ -57,3 +57,30 @@ variable "timeout_seconds" {
   type        = number
   default     = 3600
 }
+
+# ── Pipeline 2: Data Classification (manager's code) ─────────────────────────
+
+variable "governance_project" {
+  description = "The GCP project ID where DLP results and mapping tables are stored."
+  type        = string
+}
+
+variable "curated_project" {
+  description = "The GCP project ID where the recommended_classification staging table lives."
+  type        = string
+}
+
+variable "dlp_results_table" {
+  description = "Full BigQuery path to the SDP/DLP column profile results table."
+  type        = string
+}
+
+variable "mapping_table" {
+  description = "Full BigQuery path to the infotype_mapping_local reference table."
+  type        = string
+}
+
+variable "recommended_table" {
+  description = "Full BigQuery path to the recommended_classification staging table (output)."
+  type        = string
+}

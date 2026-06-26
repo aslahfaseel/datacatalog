@@ -14,6 +14,13 @@ resource "google_project_iam_member" "sdp_catalog_editor" {
   member  = "serviceAccount:${google_project_service_identity.dlp_sa.email}"
 }
 
+# Required for export_data action: DLP SA must be able to write to the sdp_results table
+resource "google_project_iam_member" "sdp_bq_data_editor" {
+  project = var.project_id
+  role    = "roles/bigquery.dataEditor"
+  member  = "serviceAccount:${google_project_service_identity.dlp_sa.email}"
+}
+
 resource "google_data_loss_prevention_inspect_template" "bq_inspect" {
   parent       = "projects/${var.project_id}/locations/us"
   display_name = "VZ BQ Sensitive Data Inspection Template"
@@ -73,6 +80,16 @@ resource "google_data_loss_prevention_discovery_config" "bq_discovery" {
 
   actions {
     publish_to_dataplex_catalog {}
+  }
+
+  actions {
+    export_data {
+      profile_table {
+        project_id = var.project_id
+        dataset_id = var.results_dataset_id
+        table_id   = var.results_table_id
+      }
+    }
   }
 
   depends_on = [google_project_iam_member.sdp_catalog_editor]

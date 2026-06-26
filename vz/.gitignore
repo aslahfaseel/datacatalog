@@ -1,0 +1,31 @@
+# Terraform state files — NEVER commit these (contain sensitive resource IDs)
+*.tfstate
+*.tfstate.backup
+*.tfstate.*.backup
+
+# Terraform provider binaries and modules cache
+.terraform/
+
+# Terraform lock file — managed locally, not needed in repo
+.terraform.lock.hcl
+
+# Sensitive variable files — may contain passwords/secrets
+*.tfvars
+!example.tfvars
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Override files (local developer overrides)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Generated plan files — not meant to be shared
+*.tfplan
+
+# OS files
+.DS_Store
+Thumbs.db

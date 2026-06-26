@@ -38,6 +38,28 @@ resource "google_cloud_run_v2_job" "aspect_patcher" {
           value = var.location
         }
 
+        # Pipeline 2: Data Classification (manager's code)
+        env {
+          name  = "GOVERNANCE_PROJECT"
+          value = var.governance_project
+        }
+        env {
+          name  = "CURATED_PROJECT"
+          value = var.curated_project
+        }
+        env {
+          name  = "DLP_RESULTS_TABLE"
+          value = var.dlp_results_table
+        }
+        env {
+          name  = "MAPPING_TABLE"
+          value = var.mapping_table
+        }
+        env {
+          name  = "RECOMMENDED_TABLE"
+          value = var.recommended_table
+        }
+
         resources {
           limits = {
             cpu    = "1"

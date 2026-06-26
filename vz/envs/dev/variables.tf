@@ -43,7 +43,7 @@ variable "dq_profile_scans" {
 variable "aspect_patcher_image" {
   description = "The full Docker image URI for the Cloud Run aspect patcher job (e.g. gcr.io/project/vz-aspect-patcher:latest)."
   type        = string
-  default     = "python:3.11-slim"
+  default     = "gcr.io/dmgcp-del-181/vz-aspect-patcher:latest"
 }
 
 variable "aspect_patcher_gcs_bucket" {
