@@ -1,3 +1,11 @@
+# Internal documentation — not for GitHub (use README.md instead)
+Dataplex_Implementation_Presentation.md
+Terraform_Code_Explanation.md
+
+# IAM modules — permissions managed by security team via GCP Console, not Terraform
+custom_modules/dataplex_iam/
+custom_modules/iam_custom_roles/
+
 # Terraform state files — NEVER commit these (contain sensitive resource IDs)
 *.tfstate
 *.tfstate.backup
