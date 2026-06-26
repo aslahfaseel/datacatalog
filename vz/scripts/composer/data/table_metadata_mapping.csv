@@ -1,5 +1,0 @@
-table_id,data_owner,domain,pii_flag,sensitivity_level
-dmgcp-del-181.vzdataset.raw,Telecom Analytics Team,network,false,internal
-dmgcp-del-181.vzdataset.raw_order,Sales Team,sales,false,internal
-dmgcp-del-181.vzdataset.raw_customer,CRM Team,customer,true,confidential
-dmgcp-del-181.vzdataset.financial_metrics,Finance Team,finance,false,highly_sensitive
