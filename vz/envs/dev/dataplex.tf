@@ -35,7 +35,7 @@ module "aspect_type_asset_governance" {
         name        = "domain"
         type        = "enum"
         index       = 2
-        annotations = { displayName = "Business Domain" }
+        annotations = { displayName = "Data Domain" }
         enumValues = [
           { name = "customer",   index = 1 },
           { name = "finance",    index = 2 },
@@ -50,7 +50,7 @@ module "aspect_type_asset_governance" {
         name        = "lifecycle"
         type        = "enum"
         index       = 3
-        annotations = { displayName = "Data Lifecycle Stage" }
+        annotations = { displayName = "Data Lifecycle" }
         enumValues = [
           { name = "active",       index = 1 },
           { name = "deprecated",   index = 2 },
@@ -65,7 +65,6 @@ module "aspect_type_asset_governance" {
 }
 
 
-# Dynamically fetch the CSV from GCS so Data Stewards can manage it without touching Git
 data "google_storage_bucket_object_content" "tables_csv" {
   name   = "data/tables_to_scan.csv"
   bucket = "vz-datacatalog"
@@ -86,7 +85,6 @@ locals {
     }
   }
 
-  # Read the CSV from GCS
   tables_raw = csvdecode(data.google_storage_bucket_object_content.tables_csv.content)
 
   tables_to_scan = {
