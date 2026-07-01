@@ -1,34 +1,3 @@
-##############################################################################
-# DATAPLEX DATA QUALITY RULES — FULL TEMPLATE
-#
-# This file is a REFERENCE TEMPLATE showing all 8 built-in rule types.
-# Copy the relevant rules into your module call's dq_rules = [...] block.
-#
-# DIMENSIONS (required for every rule):
-#   COMPLETENESS  — data exists (non-null, non-empty)
-#   UNIQUENESS    — no duplicates in a column
-#   VALIDITY      — values match expected format/range/set
-#   CONSISTENCY   — relationships hold across fields or tables
-#   TIMELINESS    — data is fresh / within an expected date window
-#   ACCURACY      — values are statistically / logically correct
-#
-# THRESHOLD (default = 1.0):
-#   Fraction of rows (0.0–1.0) that must PASS the rule.
-#   1.0 = 100% of rows must pass (strictest).
-#   0.95 = at least 95% of rows must pass.
-#
-# RULE TYPES COVERED:
-#   1. non_null_expectation
-#   2. uniqueness_expectation
-#   3. range_expectation
-#   4. regex_expectation
-#   5. set_expectation
-#   6. statistic_range_expectation
-#   7. row_condition_expectation
-#   8. table_condition_expectation
-#   9. sql_assertion
-##############################################################################
-
 locals {
   # ─────────────────────────────────────────────────────────────────────────
   # RULE TYPE 1: non_null_expectation

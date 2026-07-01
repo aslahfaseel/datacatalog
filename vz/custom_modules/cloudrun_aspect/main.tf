@@ -71,8 +71,3 @@ resource "google_cloud_run_v2_job" "aspect_patcher" {
   }
 }
 
-resource "google_project_iam_member" "scheduler_run_invoker" {
-  project = var.project_id
-  role    = "roles/run.invoker"
-  member  = local.job_sa_member
-}

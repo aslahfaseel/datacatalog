@@ -65,48 +65,68 @@ module "aspect_type_asset_governance" {
 }
 
 
-module "profiling_scan_raw" {
+locals {
+  # Define the rule library (map of rule key to the full rule definition)
+  # Developers reference these keys in tables_to_scan.csv
+  rule_library = {
+    "id-not-null" = {
+      name              = "id-not-null"
+      dimension         = "COMPLETENESS"
+      column            = "id"
+      row_condition_sql = "id IS NOT NULL"
+    }
+    "raw-table-has-data" = {
+      name                = "raw-table-has-data"
+      dimension           = "COMPLETENESS"
+      table_condition_sql = "COUNT(*) > 0"
+    }
+  }
+
+  # Read the CSV and transform it into a map for for_each scanning
+  tables_raw = csvdecode(file("${path.module}/tables_to_scan.csv"))
+
+  tables_to_scan = {
+    for row in local.tables_raw :
+    row.table_key => {
+      dataset  = row.dataset
+      table    = row.table
+      # Split by semi-colon and map to full rules, ignore gracefully if empty
+      dq_rules = row.dq_rules == "" ? [] : [
+        for rule_name in split(";", row.dq_rules) : local.rule_library[trimspace(rule_name)]
+      ]
+    }
+  }
+}
+
+module "profiling_scan" {
+  for_each         = local.tables_to_scan
   source           = "../../custom_modules/dataplex_datascan/data-profiling"
   project_id       = var.project_id
   location         = var.location
-  data_scan_id     = "vz-raw-profiling-daily"
-  display_name     = "VZ Raw - Daily Profiling"
-  description      = "Automated daily profiling scan for vzdataset.raw"
+  data_scan_id     = "vz-${replace(each.key, "_", "-")}-profiling-daily"
+  display_name     = "VZ ${title(replace(each.key, "_", " "))} - Daily Profiling"
+  description      = "Automated daily profiling scan for ${each.value.dataset}.${each.value.table}"
   labels           = merge(local.common_labels, { scan_type = "profiling" })
-  source_bq_table  = "${local.bq_prefix}/datasets/vzdataset/tables/raw"
+  source_bq_table  = "${local.bq_prefix}/datasets/${each.value.dataset}/tables/${each.value.table}"
   results_bq_table = local.profile_results_table
   schedule_cron    = "0 0 * * *"
   sampling_percent = 100.0
 }
 
-
-module "dq_scan_raw" {
+module "dq_scan" {
+  for_each         = local.tables_to_scan
   source           = "../../custom_modules/dataplex_datascan/data-quality"
   project_id       = var.project_id
   location         = var.location
-  data_scan_id     = "vz-raw-dq-daily"
-  display_name     = "VZ Raw - Daily Data Quality"
-  description      = "Automated daily DQ scan for vzdataset.raw"
+  data_scan_id     = "vz-${replace(each.key, "_", "-")}-dq-daily"
+  display_name     = "VZ ${title(replace(each.key, "_", " "))} - Daily Data Quality"
+  description      = "Automated daily DQ scan for ${each.value.dataset}.${each.value.table}"
   labels           = merge(local.common_labels, { scan_type = "dq" })
-  source_bq_table  = "${local.bq_prefix}/datasets/vzdataset/tables/raw"
+  source_bq_table  = "${local.bq_prefix}/datasets/${each.value.dataset}/tables/${each.value.table}"
   results_bq_table = local.dq_results_table
   schedule_cron    = "0 6 * * *"
   sampling_percent = 100.0
-  dq_rules = [
-    {
-      name              = "id-not-null"
-      dimension         = "COMPLETENESS"
-      threshold         = 1.0
-      column            = "id"
-      row_condition_sql = "id IS NOT NULL"
-    },
-
- {
-      name                 = "raw-table-has-data"
-      dimension            = "COMPLETENESS"
-      table_condition_sql  = "COUNT(*) > 0"
-    }
-  ]
+  dq_rules         = each.value.dq_rules
 }
 
 

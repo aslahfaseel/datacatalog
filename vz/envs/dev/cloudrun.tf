@@ -1,5 +1,5 @@
 module "cloudrun_aspect_patcher" {
-  source = "../../custom_modules/cloudrun_aspect_patcher"
+  source = "../../custom_modules/cloudrun_aspect"
 
   project_id  = var.project_id
   location    = var.location
@@ -31,4 +31,5 @@ module "cloudrun_aspect_patcher" {
   }
 
 }
+
 

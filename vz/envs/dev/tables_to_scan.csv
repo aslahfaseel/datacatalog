@@ -1,0 +1,3 @@
+table_key,dataset,table,dq_rules
+raw,vzdataset,raw,id-not-null;raw-table-has-data
+raw_customer,vzdataset,raw_customer,raw-table-has-data

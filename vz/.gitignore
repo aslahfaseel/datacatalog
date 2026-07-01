@@ -6,6 +6,9 @@ Terraform_Code_Explanation.md
 custom_modules/dataplex_iam/
 custom_modules/iam_custom_roles/
 
+# Deprecated Composer DAGs — replaced by Cloud Run aspect_patcher pipeline
+scripts/composer/
+
 # Terraform state files — NEVER commit these (contain sensitive resource IDs)
 *.tfstate
 *.tfstate.backup
