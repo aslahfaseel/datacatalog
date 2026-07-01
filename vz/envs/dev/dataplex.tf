@@ -65,9 +65,13 @@ module "aspect_type_asset_governance" {
 }
 
 
+# Dynamically fetch the CSV from GCS so Data Stewards can manage it without touching Git
+data "google_storage_bucket_object_content" "tables_csv" {
+  name   = "data/tables_to_scan.csv"
+  bucket = "vz-datacatalog"
+}
+
 locals {
-  # Define the rule library (map of rule key to the full rule definition)
-  # Developers reference these keys in tables_to_scan.csv
   rule_library = {
     "id-not-null" = {
       name              = "id-not-null"
@@ -82,8 +86,8 @@ locals {
     }
   }
 
-  # Read the CSV and transform it into a map for for_each scanning
-  tables_raw = csvdecode(file("${path.module}/tables_to_scan.csv"))
+  # Read the CSV from GCS
+  tables_raw = csvdecode(data.google_storage_bucket_object_content.tables_csv.content)
 
   tables_to_scan = {
     for row in local.tables_raw :
