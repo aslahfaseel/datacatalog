@@ -71,28 +71,17 @@ data "google_storage_bucket_object_content" "tables_csv" {
 }
 
 locals {
-  rule_library = {
-    "id-not-null" = {
-      name              = "id-not-null"
-      dimension         = "COMPLETENESS"
-      column            = "id"
-      row_condition_sql = "id IS NOT NULL"
-    }
-    "raw-table-has-data" = {
-      name                = "raw-table-has-data"
-      dimension           = "COMPLETENESS"
-      table_condition_sql = "COUNT(*) > 0"
-    }
-  }
+  # Merge prebuilt_rules.tf and custom_rules.tf into one unified lookup for CSV use
+  rule_library = merge(local.prebuilt_rules, local.custom_rules)
 
   tables_raw = csvdecode(data.google_storage_bucket_object_content.tables_csv.content)
 
   tables_to_scan = {
     for row in local.tables_raw :
     row.table_key => {
-      dataset  = row.dataset
-      table    = row.table
-      # Split by semi-colon and map to full rules, ignore gracefully if empty
+      project_id = row.project_id
+      dataset    = row.dataset
+      table      = row.table
       dq_rules = row.dq_rules == "" ? [] : [
         for rule_name in split(";", row.dq_rules) : local.rule_library[trimspace(rule_name)]
       ]
@@ -103,13 +92,13 @@ locals {
 module "profiling_scan" {
   for_each         = local.tables_to_scan
   source           = "../../custom_modules/dataplex_datascan/data-profiling"
-  project_id       = var.project_id
+  project_id       = each.value.project_id
   location         = var.location
-  data_scan_id     = "vz-${replace(each.key, "_", "-")}-profiling-daily"
-  display_name     = "VZ ${title(replace(each.key, "_", " "))} - Daily Profiling"
+  data_scan_id     = "${replace(each.value.project_id, "_", "-")}-${replace(each.value.dataset, "_", "-")}-${replace(each.value.table, "_", "-")}-data-profile-scan"
+  display_name     = "${each.value.project_id} | ${each.value.dataset} | ${title(replace(each.value.table, "_", " "))} - Data Profile"
   description      = "Automated daily profiling scan for ${each.value.dataset}.${each.value.table}"
   labels           = merge(local.common_labels, { scan_type = "profiling" })
-  source_bq_table  = "${local.bq_prefix}/datasets/${each.value.dataset}/tables/${each.value.table}"
+  source_bq_table  = "//bigquery.googleapis.com/projects/${each.value.project_id}/datasets/${each.value.dataset}/tables/${each.value.table}"
   results_bq_table = local.profile_results_table
   schedule_cron    = "0 0 * * *"
   sampling_percent = 100.0
@@ -118,13 +107,13 @@ module "profiling_scan" {
 module "dq_scan" {
   for_each         = local.tables_to_scan
   source           = "../../custom_modules/dataplex_datascan/data-quality"
-  project_id       = var.project_id
+  project_id       = each.value.project_id
   location         = var.location
-  data_scan_id     = "vz-${replace(each.key, "_", "-")}-dq-daily"
-  display_name     = "VZ ${title(replace(each.key, "_", " "))} - Daily Data Quality"
+  data_scan_id     = "${replace(each.value.project_id, "_", "-")}-${replace(each.value.dataset, "_", "-")}-${replace(each.value.table, "_", "-")}-data-quality-scan"
+  display_name     = "${each.value.project_id} | ${each.value.dataset} | ${title(replace(each.value.table, "_", " "))} - Data Quality"
   description      = "Automated daily DQ scan for ${each.value.dataset}.${each.value.table}"
   labels           = merge(local.common_labels, { scan_type = "dq" })
-  source_bq_table  = "${local.bq_prefix}/datasets/${each.value.dataset}/tables/${each.value.table}"
+  source_bq_table  = "//bigquery.googleapis.com/projects/${each.value.project_id}/datasets/${each.value.dataset}/tables/${each.value.table}"
   results_bq_table = local.dq_results_table
   schedule_cron    = "0 6 * * *"
   sampling_percent = 100.0
