@@ -82,6 +82,7 @@ locals {
       project_id = row.project_id
       dataset    = row.dataset
       table      = row.table
+      schedule   = lookup(row, "schedule", "0 6 * * *")
       dq_rules = row.dq_rules == "" ? [] : [
         for rule_name in split(";", row.dq_rules) : local.rule_library[trimspace(rule_name)]
       ]
@@ -100,7 +101,7 @@ module "profiling_scan" {
   labels           = merge(local.common_labels, { scan_type = "profiling" })
   source_bq_table  = "//bigquery.googleapis.com/projects/${each.value.project_id}/datasets/${each.value.dataset}/tables/${each.value.table}"
   results_bq_table = local.profile_results_table
-  schedule_cron    = "0 0 * * *"
+  schedule_cron    = each.value.schedule == "on_demand" ? null : "0 0 * * *"
   sampling_percent = 100.0
 }
 
@@ -115,7 +116,7 @@ module "dq_scan" {
   labels           = merge(local.common_labels, { scan_type = "dq" })
   source_bq_table  = "//bigquery.googleapis.com/projects/${each.value.project_id}/datasets/${each.value.dataset}/tables/${each.value.table}"
   results_bq_table = local.dq_results_table
-  schedule_cron    = "0 6 * * *"
+  schedule_cron    = each.value.schedule == "on_demand" ? null : each.value.schedule
   sampling_percent = 100.0
   dq_rules         = each.value.dq_rules
 }
