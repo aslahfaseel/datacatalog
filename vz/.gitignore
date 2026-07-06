@@ -20,9 +20,8 @@ scripts/composer/
 # Terraform lock file — managed locally, not needed in repo
 .terraform.lock.hcl
 
-# Sensitive variable files — may contain passwords/secrets
-*.tfvars
-!example.tfvars
+# Sensitive variable files — use terraform.tfvars for environment-specific values
+# (terraform.tfvars is tracked in git — do NOT put raw passwords or secrets in it)
 
 # Crash log files
 crash.log

@@ -67,11 +67,10 @@ module "aspect_type_asset_governance" {
 
 data "google_storage_bucket_object_content" "tables_csv" {
   name   = "data/tables_to_scan.csv"
-  bucket = "vz-datacatalog"
+  bucket = "aspect-application-poc-bucket"
 }
 
 locals {
-  # Merge prebuilt_rules.tf and custom_rules.tf into one unified lookup for CSV use
   rule_library = merge(local.prebuilt_rules, local.custom_rules)
 
   tables_raw = csvdecode(data.google_storage_bucket_object_content.tables_csv.content)
