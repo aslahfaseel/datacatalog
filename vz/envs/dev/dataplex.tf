@@ -155,8 +155,8 @@ resource "google_dataplex_datascan" "dq_from_profile" {
 
   project      = each.value.project_id
   location     = each.value.region
-  data_scan_id = each.value.new_dq_scan_id
-  display_name = "DQ (Profile Recommendations) — ${each.value.existing_profile_scan_id}"
+  data_scan_id = "${replace(each.value.project_id, "_", "-")}-${replace(each.value.dataset_id, "_", "-")}-${replace(each.value.table_id, "_", "-")}-dq-rules-based-data-profile"
+  display_name = "${each.value.project_id} | ${each.value.dataset_id} | ${title(replace(each.value.table_id, "_", " "))} - DQ Rules Based Data Profile"
   labels       = merge(local.common_labels, { scan_type = "dq-profile-based" })
 
   data {

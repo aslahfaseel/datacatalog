@@ -1,4 +1,4 @@
-table_key,dataset,table,dq_rules
-raw,vzdataset,raw,id-not-null;raw-table-has-data
-raw_customer,vzdataset,raw_customer,raw-table-has-data
-raw_order,vzdataset,raw_order,raw-table-has-data
+project_id,table_key,dataset,table,dq_rules,schedule
+dmgcp-del-181,raw,vzdataset,raw,id-not-null;raw-table-has-data,0 6 * * *
+dmgcp-del-181,raw_customer,vzdataset,raw_customer,raw-table-has-data,0 6 * * *
+dmgcp-del-181,raw_order,vzdataset,raw_order,raw-table-has-data,0 6 * * *
