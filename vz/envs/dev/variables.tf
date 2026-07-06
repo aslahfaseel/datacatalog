@@ -33,8 +33,9 @@ variable "dq_profile_scans" {
   type = map(object({
     project_id               = string
     region                   = string
+    dataset_id               = string
+    table_id                 = string
     existing_profile_scan_id = string
-    new_dq_scan_id           = string
   }))
   default = {}
 }
