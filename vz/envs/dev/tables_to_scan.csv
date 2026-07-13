@@ -1,4 +1,0 @@
-project_id,table_key,dataset,table,dq_rules
-vz-it-np-keiv-dev-dpev-0,vbg_wls_fwa_daily_cv,coe_tbls,vbg_wls_fwa_daily_cv,raw-table-has-data
-vz-it-np-keiv-dev-dpev-0,vbg_wls_daily_fcst,coe_tbls,vbg_wls_daily_fcst,raw-table-has-data
-vz-it-np-keiv-dev-dpev-0,tspot_vzw_ref_dates_v,coe_tbls,tspot_vzw_ref_dates_v,raw-table-has-data

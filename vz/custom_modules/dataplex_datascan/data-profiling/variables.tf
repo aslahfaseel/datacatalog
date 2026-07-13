@@ -47,3 +47,8 @@ variable "row_filter" {
   type    = string
   default = null
 }
+
+variable "exclude_columns" {
+  type    = list(string)
+  default = []
+}

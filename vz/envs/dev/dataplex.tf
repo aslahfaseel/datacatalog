@@ -65,57 +65,91 @@ module "aspect_type_asset_governance" {
 }
 
 
-data "google_storage_bucket_object_content" "tables_csv" {
-  name   = "data/tables_to_scan.csv"
-  bucket = "aspect-application-poc-bucket"
+data "google_storage_bucket_object_content" "profiling_csv" {
+  name   = "data/profiling.csv"
+  bucket = "vz-datacatalog"
+}
+
+data "google_storage_bucket_object_content" "custom_dq_csv" {
+  name   = "data/custom_dq.csv"
+  bucket = "vz-datacatalog"
+}
+data "google_storage_bucket_object_content" "profile_dq_csv" {
+  name   = "data/profile_based_dq.csv"
+  bucket = "vz-datacatalog"
 }
 
 locals {
   rule_library = merge(local.prebuilt_rules, local.custom_rules)
 
-  tables_raw = csvdecode(data.google_storage_bucket_object_content.tables_csv.content)
+  profiling_raw = csvdecode(data.google_storage_bucket_object_content.profiling_csv.content)
 
-  tables_to_scan = {
-    for row in local.tables_raw :
+  profiling_to_scan = {
+    for row in local.profiling_raw :
+    row.table_key => {
+      project_id      = row.project_id
+      dataset         = row.dataset
+      table           = row.table
+      exclude_columns = lookup(row, "exclude_columns", "") == "" ? [] : [for f in split(";", lookup(row, "exclude_columns", "")) : trimspace(f)]
+    }
+  }
+
+  custom_dq_raw = csvdecode(data.google_storage_bucket_object_content.custom_dq_csv.content)
+
+  custom_dq_to_scan = {
+    for row in local.custom_dq_raw :
     row.table_key => {
       project_id = row.project_id
       dataset    = row.dataset
       table      = row.table
-      schedule   = lookup(row, "schedule", "0 6 * * *")
       dq_rules = row.dq_rules == "" ? [] : [
         for rule_name in split(";", row.dq_rules) : local.rule_library[trimspace(rule_name)]
       ]
     }
   }
+
+  profile_dq_raw = csvdecode(data.google_storage_bucket_object_content.profile_dq_csv.content)
+
+  profile_based_scans = {
+    for row in local.profile_dq_raw :
+    row.table => {
+      project_id               = row.project_id
+      region                   = var.region
+      dataset_id               = row.dataset
+      table_id                 = row.table
+      existing_profile_scan_id = "${replace(row.dataset, "_", "-")}-${replace(row.table, "_", "-")}-data-profile-scan"
+    }
+  }
 }
 
 module "profiling_scan" {
-  for_each         = local.tables_to_scan
+  for_each         = local.profiling_to_scan
   source           = "../../custom_modules/dataplex_datascan/data-profiling"
   project_id       = each.value.project_id
   location         = var.location
-  data_scan_id     = "${replace(each.value.project_id, "_", "-")}-${replace(each.value.dataset, "_", "-")}-${replace(each.value.table, "_", "-")}-data-profile-scan"
-  display_name     = "${each.value.project_id} | ${each.value.dataset} | ${title(replace(each.value.table, "_", " "))} - Data Profile"
+  data_scan_id     = "${replace(each.value.dataset, "_", "-")}-${replace(each.value.table, "_", "-")}-data-profile-scan"
+  display_name     = "${each.value.project_id} - ${each.value.dataset} - ${title(replace(each.value.table, "_", " "))} - Data Profile"
   description      = "Automated daily profiling scan for ${each.value.dataset}.${each.value.table}"
   labels           = merge(local.common_labels, { scan_type = "profiling" })
   source_bq_table  = "//bigquery.googleapis.com/projects/${each.value.project_id}/datasets/${each.value.dataset}/tables/${each.value.table}"
   results_bq_table = local.profile_results_table
-  schedule_cron    = each.value.schedule == "on_demand" ? null : "0 0 * * *"
+  schedule_cron    = null
   sampling_percent = 100.0
+  exclude_columns  = each.value.exclude_columns
 }
 
 module "dq_scan" {
-  for_each         = local.tables_to_scan
+  for_each         = local.custom_dq_to_scan
   source           = "../../custom_modules/dataplex_datascan/data-quality"
   project_id       = each.value.project_id
   location         = var.location
-  data_scan_id     = "${replace(each.value.project_id, "_", "-")}-${replace(each.value.dataset, "_", "-")}-${replace(each.value.table, "_", "-")}-data-quality-scan"
-  display_name     = "${each.value.project_id} | ${each.value.dataset} | ${title(replace(each.value.table, "_", " "))} - Data Quality"
+  data_scan_id     = "${replace(each.value.dataset, "_", "-")}-${replace(each.value.table, "_", "-")}-data-quality-scan"
+  display_name     = "${each.value.project_id} - ${each.value.dataset} - ${title(replace(each.value.table, "_", " "))} - Data Quality"
   description      = "Automated daily DQ scan for ${each.value.dataset}.${each.value.table}"
   labels           = merge(local.common_labels, { scan_type = "dq" })
   source_bq_table  = "//bigquery.googleapis.com/projects/${each.value.project_id}/datasets/${each.value.dataset}/tables/${each.value.table}"
   results_bq_table = local.dq_results_table
-  schedule_cron    = each.value.schedule == "on_demand" ? null : each.value.schedule
+  schedule_cron    = null
   sampling_percent = 100.0
   dq_rules         = each.value.dq_rules
 }
@@ -124,7 +158,7 @@ module "dq_scan" {
 data "google_client_config" "default" {}
 
 data "http" "profile_scan_details" {
-  for_each = var.dq_profile_scans
+  for_each = local.profile_based_scans
 
   url = "https://dataplex.googleapis.com/v1/projects/${each.value.project_id}/locations/${each.value.region}/dataScans/${each.value.existing_profile_scan_id}"
 
@@ -142,7 +176,7 @@ locals {
 }
 
 data "google_dataplex_data_quality_rules" "recommendations" {
-  for_each = var.dq_profile_scans
+  for_each = local.profile_based_scans
 
   project      = each.value.project_id
   location     = each.value.region
@@ -150,12 +184,12 @@ data "google_dataplex_data_quality_rules" "recommendations" {
 }
 
 resource "google_dataplex_datascan" "dq_from_profile" {
-  for_each = var.dq_profile_scans
+  for_each = local.profile_based_scans
 
   project      = each.value.project_id
   location     = each.value.region
-  data_scan_id = "${replace(each.value.project_id, "_", "-")}-${replace(each.value.dataset_id, "_", "-")}-${replace(each.value.table_id, "_", "-")}-dq-rules-based-data-profile"
-  display_name = "${each.value.project_id} | ${each.value.dataset_id} | ${title(replace(each.value.table_id, "_", " "))} - DQ Rules Based Data Profile"
+  data_scan_id = "${replace(each.value.dataset_id, "_", "-")}-${replace(each.value.table_id, "_", "-")}-dq-rules-based-data-profile"
+  display_name = "${each.value.project_id} - ${each.value.dataset_id} - ${title(replace(each.value.table_id, "_", " "))} - DQ Rules Based Data Profile"
   labels       = merge(local.common_labels, { scan_type = "dq-profile-based" })
 
   data {
@@ -164,9 +198,7 @@ resource "google_dataplex_datascan" "dq_from_profile" {
 
   execution_spec {
     trigger {
-      schedule {
-        cron = "0 6 * * *"
-      }
+      on_demand {}
     }
   }
 
@@ -252,22 +284,22 @@ resource "google_dataplex_datascan" "dq_from_profile" {
 
 }
 
-module "sensitive_data_protection" {
-  source = "../../custom_modules/dataplex_sdp"
+# module "sensitive_data_protection" {
+#  source = "../../custom_modules/dataplex_sdp"
 
-  project_id = var.project_id
+#  project_id = var.project_id
   
   # 2. DLP Discovery Configs must be in the multi-region 'us' location — do not change this
-  location   = "us"
+ # location   = "us"
   
   # 3. (Optional) Customize the sensitive data types you want to find.
   # If you don't include this block, it will use the default list from variables.tf
-  info_types = [
-    "EMAIL_ADDRESS",
-    "CREDIT_CARD_NUMBER",
-    "US_SOCIAL_SECURITY_NUMBER",
-    "PERSON_NAME",
-    "PHONE_NUMBER",
-    "GCP_CREDENTIALS"
-  ]
-}
+ # info_types = [
+ #   "EMAIL_ADDRESS",
+ #   "CREDIT_CARD_NUMBER",
+ #   "US_SOCIAL_SECURITY_NUMBER",
+ #   "PERSON_NAME",
+ #   "PHONE_NUMBER",
+ #   "GCP_CREDENTIALS"
+ # ]
+#}

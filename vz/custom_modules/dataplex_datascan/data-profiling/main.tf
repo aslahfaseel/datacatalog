@@ -31,6 +31,13 @@ resource "google_dataplex_datascan" "profiling" {
     row_filter                 = var.row_filter
     catalog_publishing_enabled = true
 
+    dynamic "exclude_fields" {
+      for_each = length(var.exclude_columns) > 0 ? [1] : []
+      content {
+        field_names = var.exclude_columns
+      }
+    }
+
     post_scan_actions {
       bigquery_export {
         results_table = var.results_bq_table
