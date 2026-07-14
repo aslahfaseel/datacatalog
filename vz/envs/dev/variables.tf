@@ -37,3 +37,9 @@ variable "aspect_patcher_gcs_bucket" {
   type        = string
   default     = "vz-datacatalog"
 }
+
+variable "image_tag" {
+  description = "The Jenkins CI/CD Git commit hash dynamically passed to Terraform."
+  type        = string
+}
+
