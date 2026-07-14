@@ -1,5 +1,4 @@
 locals {
-  # Base URI copied directly from build_images.sh Jenkins script
   base_image_uri = "us-east4-docker.pkg.dev/vz-it-np-keiv-dev-dpev-0/vz-it-keiv-dpev-0-docker"
 }
 
@@ -60,7 +59,6 @@ module "cloudrun_trust_score" {
   service_account_email = var.terraform_sa
 
   env_vars = {
-    # Replace with whatever config trust score needs, e.g.
     TRUST_CONFIG_URI = "gs://vz-datacatalog/data/trust_score_config.json"
   }
 
