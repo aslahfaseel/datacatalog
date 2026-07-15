@@ -1,0 +1,9 @@
+# VZ Data Classification Scope
+# Defines which BigQuery datasets/tables the classification pipeline should process.
+# If tables list is empty, ALL tables in the dataset are automatically discovered.
+scope:
+  - project: dmgcp-del-181
+    dataset: vzdataset
+    # tables:          # Uncomment to restrict to specific tables
+    #   - raw
+    #   - curated
