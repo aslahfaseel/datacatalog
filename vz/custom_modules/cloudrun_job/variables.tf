@@ -47,3 +47,14 @@ variable "labels" {
   type        = map(string)
   default     = {}
 }
+
+variable "vpc_connector" {
+  description = "The full resource ID of the Serverless VPC Access Connector"
+  type        = string
+}
+
+variable "vpc_egress" {
+  description = "The outbound network traffic routing behavior"
+  type        = string
+  default     = "ALL_TRAFFIC"
+}
