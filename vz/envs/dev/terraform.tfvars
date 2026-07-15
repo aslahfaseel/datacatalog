@@ -4,6 +4,7 @@ location    = "us-east4"
 terraform_sa = "sa-dev-keiv-app-dpev-0@vz-it-np-keiv-dev-dpev-0.iam.gserviceaccount.com"
 dataplex_service_agent = "service-594212039830@gcp-sa-dataplex.iam.gserviceaccount.com"
 alert_emails = ["your-team@company.com"]
+aspect_patcher_gcs_bucket = "vz-datacatalog"
 
 dq_profile_scans = {
   #raw = {
@@ -20,5 +21,3 @@ dq_profile_scans = {
   #   new_dq_scan_id           = "vz-raw-customer-dq-profile-based"
   # }
 }
-
-

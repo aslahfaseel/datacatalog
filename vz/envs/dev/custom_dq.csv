@@ -1,0 +1,3 @@
+project_id,table_key,dataset,table,dq_rules
+dmgcp-del-181,financial_metrics,vzdataset,financial_metrics,raw-table-has-data
+dmgcp-del-181,raw_customer,vzdataset,raw_customer,raw-table-has-data

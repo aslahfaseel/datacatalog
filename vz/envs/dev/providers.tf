@@ -10,10 +10,10 @@ terraform {
       version = "~> 3.0"
     }
   }
- #  backend "gcs" {
- #      bucket = "aspect-application-poc-bucket"
- #         prefix = "vz/dataplex/dev"
- # }
+  backend "gcs" {
+    bucket = "aspect-application-poc-bucket"
+    prefix = "vz/dataplex/dev"
+  }
 }
 
 provider "google" {

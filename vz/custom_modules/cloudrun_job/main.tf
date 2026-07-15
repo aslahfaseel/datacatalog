@@ -18,6 +18,14 @@ resource "google_cloud_run_v2_job" "job" {
         egress    = var.vpc_egress
       }
 
+      dynamic "vpc_access" {
+        for_each = var.vpc_connector != null ? [1] : []
+        content {
+          connector = var.vpc_connector
+          egress    = var.vpc_egress
+        }
+      }
+
       containers {
         image = var.container_image
 

@@ -49,12 +49,13 @@ variable "labels" {
 }
 
 variable "vpc_connector" {
-  description = "The full resource ID of the Serverless VPC Access Connector"
+  description = "The VPC Access Connector for the Cloud Run job"
   type        = string
+  default     = null
 }
 
 variable "vpc_egress" {
-  description = "The outbound network traffic routing behavior"
+  description = "The VPC Egress setting (e.g. ALL_TRAFFIC, PRIVATE_RANGES_ONLY)"
   type        = string
   default     = "ALL_TRAFFIC"
 }

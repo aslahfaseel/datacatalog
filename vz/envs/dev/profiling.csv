@@ -1,0 +1,5 @@
+project_id,table_key,dataset,table,exclude_columns
+dmgcp-del-181,financial_metrics,vzdataset,financial_metrics,
+dmgcp-del-181,raw_customer,vzdataset,raw_customer,
+dmgcp-del-181,test_collation_table,vzdataset,test_collation_table,name;status
+dmgcp-del-181,test_collation_table1,vzdataset,test_collation_table1,name;status
