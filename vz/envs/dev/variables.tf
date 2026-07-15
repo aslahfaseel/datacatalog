@@ -25,27 +25,32 @@ variable "alert_emails" {
   default = []
 }
 
-variable "aspect_patcher_gcs_bucket" {
-  description = "The GCS bucket name where the vz_aspect_assignment.csv file is stored."
+variable "trust_score_tag" {
+  description = "Image tag for Trust Score"
   type        = string
-  default     = "vz-datacatalog"
+  default     = "latest"
 }
 
 variable "bulk_aspect_apply_tag" {
-  description = "The container image tag for the bulk aspect apply job."
+  description = "Image tag for Bulk Aspect Apply"
   type        = string
   default     = "latest"
 }
 
-variable "profiler_tag" {
-  description = "The container image tag for the profiler job."
+variable "profiler_cloud_run_tag" {
+  description = "Image tag for Profiler"
   type        = string
   default     = "latest"
 }
 
-variable "trust_score_tag" {
-  description = "The container image tag for the trust score job."
-  type        = string
-  default     = "latest"
+variable "dq_profile_scans" {
+  description = "config mapping"
+  type        = any
+  default     = {}  
 }
 
+variable "aspect_patcher_gcs_bucket" {
+  description = "GCS bucket for bulk apply"
+  type        = string
+   default     = "aspect-application-poc-bucket"
+}
