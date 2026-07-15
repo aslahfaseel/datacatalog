@@ -13,6 +13,10 @@ resource "google_cloud_run_v2_job" "job" {
       service_account = var.service_account_email
       max_retries     = var.max_retries
       timeout         = "${var.timeout_seconds}s"
+       vpc_access {
+        connector = var.vpc_connector
+        egress    = var.vpc_egress
+      }
 
       containers {
         image = var.container_image
@@ -30,7 +34,8 @@ resource "google_cloud_run_v2_job" "job" {
             cpu    = "1"
             memory = "512Mi"
           }
-        }
+        
+        }    
       }
     }
   }
