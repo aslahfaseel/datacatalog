@@ -8,7 +8,11 @@ resource "google_project_service_identity" "dlp_sa" {
   service  = "dlp.googleapis.com"
 }
 
-
+#resource "google_project_iam_member" "sdp_catalog_editor" {
+  #project = var.project_id
+  #role    = "roles/dataplex.catalogEditor"
+  #member  = "serviceAccount:${google_project_service_identity.dlp_sa.email}"
+#}
 
 resource "google_data_loss_prevention_inspect_template" "bq_inspect" {
   parent       = "projects/${var.project_id}/locations/us"
@@ -71,13 +75,5 @@ resource "google_data_loss_prevention_discovery_config" "bq_discovery" {
     publish_to_dataplex_catalog {}
   }
 
-  actions {
-    export_data {
-      profile_table {
-        project_id = var.project_id
-        dataset_id = var.results_dataset_id
-        table_id   = var.results_table_id
-      }
-    }
-  }
+  #depends_on = [google_project_iam_member.sdp_catalog_editor]
 }
