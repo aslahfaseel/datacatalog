@@ -10,10 +10,10 @@ terraform {
       version = "~> 3.0"
     }
   }
-  backend "gcs" {
-    bucket = "vz-datacatalog"
-    prefix = "vz/dataplex/dev"
-  }
+ #  backend "gcs" {
+ #      bucket = "aspect-application-poc-bucket"
+ #         prefix = "vz/dataplex/dev"
+ # }
 }
 
 provider "google" {
@@ -21,3 +21,4 @@ provider "google" {
   region                      = var.region
   impersonate_service_account = var.terraform_sa
 }
+
