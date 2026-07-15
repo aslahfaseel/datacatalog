@@ -49,16 +49,5 @@ variable "scan_frequency" {
   description = "How frequently data profiles can be updated when tables are modified."
   type        = string
   default     = "UPDATE_FREQUENCY_MONTHLY" 
-}
-
-variable "results_dataset_id" {
-  description = "The BigQuery dataset ID where SDP scan results will be exported."
-  type        = string
-  default     = "vzdataset"
-}
-
-variable "results_table_id" {
-  description = "The BigQuery table ID where SDP scan results will be exported."
-  type        = string
-  default     = "sdp_results"
+  # Other valid options: "UPDATE_FREQUENCY_NEVER" or "UPDATE_FREQUENCY_DAILY"
 }
