@@ -25,21 +25,27 @@ variable "alert_emails" {
   default = []
 }
 
-# Cloud Run Aspect Patcher variables
-variable "aspect_patcher_image" {
-  description = "The full Docker image URI for the Cloud Run aspect patcher job (e.g. gcr.io/project/vz-aspect-patcher:latest)."
-  type        = string
-  default     = "gcr.io/dmgcp-del-181/vz-aspect-patcher:latest"
-}
-
 variable "aspect_patcher_gcs_bucket" {
   description = "The GCS bucket name where the vz_aspect_assignment.csv file is stored."
   type        = string
   default     = "vz-datacatalog"
 }
 
-variable "image_tag" {
-  description = "The Jenkins CI/CD Git commit hash dynamically passed to Terraform."
+variable "bulk_aspect_apply_tag" {
+  description = "The container image tag for the bulk aspect apply job."
   type        = string
+  default     = "latest"
+}
+
+variable "profiler_tag" {
+  description = "The container image tag for the profiler job."
+  type        = string
+  default     = "latest"
+}
+
+variable "trust_score_tag" {
+  description = "The container image tag for the trust score job."
+  type        = string
+  default     = "latest"
 }
 

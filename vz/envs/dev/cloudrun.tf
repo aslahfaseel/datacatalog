@@ -4,6 +4,7 @@ locals {
   cloudrun_jobs = {
     "bulk-aspect-apply" = {
       image           = "bulk_aspect_apply"
+      tag             = var.bulk_aspect_apply_tag
       max_retries     = 3
       timeout_seconds = 3600
       env_vars = {
@@ -21,6 +22,7 @@ locals {
 
     "vz-profiler-job" = {
       image           = "profiler_cloud_run"
+      tag             = var.profiler_tag
       max_retries     = 3
       timeout_seconds = 3600
       env_vars = {
@@ -30,6 +32,7 @@ locals {
 
     "vz-trust-score" = {
       image           = "trust_score"
+      tag             = var.trust_score_tag
       max_retries     = 3
       timeout_seconds = 3600
       env_vars = {
@@ -46,8 +49,12 @@ module "cloudrun_jobs" {
   project_id            = var.project_id
   location              = var.location
   job_name              = each.key
-  container_image       = "${local.base_image_uri}/${each.value.image}:${var.image_tag}"
+  container_image       = "${local.base_image_uri}/${each.value.image}:${each.value.tag}"
   service_account_email = var.terraform_sa
+  
+  vpc_connector         = "projects/vz-it-np-exhv-sharedvpc-228116/locations/us-east4/connectors/shared-np-east"
+  vpc_egress            = "ALL_TRAFFIC"
+  
   max_retries           = each.value.max_retries
   timeout_seconds       = each.value.timeout_seconds
   env_vars              = each.value.env_vars
