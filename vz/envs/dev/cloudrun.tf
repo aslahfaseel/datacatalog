@@ -1,7 +1,7 @@
 locals {
   base_image_uri = "us-east4-docker.pkg.dev/vz-it-np-keiv-dev-dpev-0/vz-it-keiv-dpev-0-docker"
-
-  cloudrun_jobs = {
+  
+   cloudrun_jobs = {
     "bulk-aspect-apply" = {
       image           = "bulk_aspect_apply"
       tag             = var.bulk_aspect_apply_tag
@@ -22,7 +22,7 @@ locals {
 
     "vz-profiler-job" = {
       image           = "profiler_cloud_run"
-      tag             = var.profiler_tag
+      tag             = var.profiler_cloud_run_tag
       max_retries     = 3
       timeout_seconds = 3600
       env_vars = {
