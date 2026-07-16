@@ -1,0 +1,5 @@
+project_id: "dmgcp-del-181"
+dataset_id: "vzdataset"
+table_id: "test_collation_table"
+location: "us-central1"
+exclude_strings: false

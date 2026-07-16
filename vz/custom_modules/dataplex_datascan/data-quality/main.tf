@@ -45,7 +45,7 @@ resource "google_dataplex_datascan" "quality" {
         name        = rules.value.name
         description = lookup(rules.value, "description", "")
         dimension   = rules.value.dimension
-        threshold   = lookup(rules.value, "threshold", 1.0)
+        threshold   = lookup(rules.value, "table_condition_sql", null) != null ? null : lookup(rules.value, "threshold", 1.0)
         column      = lookup(rules.value, "column", null)
         ignore_null = lookup(rules.value, "ignore_null", null)
 

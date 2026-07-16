@@ -1,7 +1,7 @@
 locals {
   bq_prefix             = "//bigquery.googleapis.com/projects/${var.project_id}"
-  dq_results_table      = "${local.bq_prefix}/datasets/vzdataset/tables/dq_results"
-  profile_results_table = "${local.bq_prefix}/datasets/vzdataset/tables/profiling_results"
+  dq_results_table      = "${local.bq_prefix}/datasets/gcp_governance_tbls/tables/data_quality_results"
+  profile_results_table = "${local.bq_prefix}/datasets/gcp_governance_tbls/tables/data_profiling_results"
   common_labels = {
     project     = "vz"
     environment = "dev"
@@ -9,110 +9,225 @@ locals {
   }
 }
 
-module "dataplex_iam" {
-  source                 = "../../custom_modules/dataplex_iam"
-  project_id             = var.project_id
-  terraform_sa           = var.terraform_sa
-  dataplex_service_agent = var.dataplex_service_agent
-}
+# =============================================================================
+# ASPECT TYPES
+# =============================================================================
 
 module "aspect_type_asset_governance" {
   source         = "../../custom_modules/dataplex_aspect_type"
   project_id     = var.project_id
-  location       = var.location
-  aspect_type_id = "vz-asset-governance"
-  display_name   = "VZ Asset Governance"
+  location       = "us"
+  aspect_type_id = "data-governance"
+  display_name   = "Data Governance"
   description    = "Governance metadata: owner, domain, and lifecycle stage of the data asset"
   labels         = local.common_labels
 
   metadata_template = jsonencode({
-    name         = "vz-asset-governance"
+    name         = "data-governance"
     type         = "record"
     recordFields = [
       {
-        name        = "owner"
+        name        = "data_owner"
         type        = "string"
         index       = 1
-        annotations = { displayName = "Data Owner" }
-        constraints = { required = true }
+        annotations = { displayName = "Data Owner", description = " Business / Functional lead that manages the data" }
+        constraints = { required = false }
       },
       {
-        name        = "domain"
-        type        = "enum"
+        name        = "data_domain"
+        type        = "string"
         index       = 2
-        annotations = { displayName = "Business Domain" }
-        enumValues = [
-          { name = "customer",   index = 1 },
-          { name = "finance",    index = 2 },
-          { name = "network",    index = 3 },
-          { name = "operations", index = 4 },
-          { name = "sales",      index = 5 },
-          { name = "risk",       index = 6 }
-        ]
-        constraints = { required = true }
+        annotations = { displayName = "Data Domain", description = " Sample values = Accessory Sales, Accounts Payable & Accounts Receivable"}
+        constraints = { required = false }
       },
       {
-        name        = "lifecycle"
+        name        = "data_domain_description"
+        type        = "text"
+        index       = 2
+        annotations = { displayName = "Data domain description", description = "description"}
+        constraints = { required = false }
+      },
+      {
+        name        = "data_lifecycle"
         type        = "enum"
         index       = 3
-        annotations = { displayName = "Data Lifecycle Stage" }
+        annotations = { displayName = "Data Lifecycle", description = "Indication of the data layer for the attached object" }
         enumValues = [
-          { name = "active",       index = 1 },
-          { name = "deprecated",   index = 2 },
-          { name = "archived",     index = 3 },
-          { name = "under_review", index = 4 }
+          { name = "Landing Zone Bronze Layer", index = 1 },
+          { name = "Processing Zone Silver Layer", index = 2 },
+          { name = "Curated Zone Gold Layer", index = 3 }
         ]
-        constraints = { required = true }
+        constraints = { required = false }
       }
     ]
   })
-
-  depends_on = [module.dataplex_iam]
 }
 
-module "profiling_scan_raw" {
-  source           = "../../custom_modules/dataplex_datascan/data-profiling"
-  project_id       = var.project_id
-  location         = var.location
-  data_scan_id     = "vz-raw-profiling-daily"
-  display_name     = "VZ Raw - Daily Profiling"
-  description      = "Automated daily profiling scan for vzdataset.raw"
-  labels           = merge(local.common_labels, { scan_type = "profiling" })
-  source_bq_table  = "${local.bq_prefix}/datasets/vzdataset/tables/raw"
-  results_bq_table = local.profile_results_table
-  schedule_cron    = "0 0 * * *"
-  sampling_percent = 100.0
-  depends_on       = [module.dataplex_iam]
+module "aspect_type_data_trustability" {
+  source         = "../../custom_modules/dataplex_aspect_type"
+  project_id     = var.project_id
+  location       = "us"
+  aspect_type_id = "data-trustability"
+  display_name   = "Data Trustability"
+  description    = "Aspect type for overall tracking of automated and manual data trust levels"
+  labels         = local.common_labels
+
+  metadata_template = jsonencode({
+    name         = "data-trustability"
+    type         = "record"
+    recordFields = [
+      {
+        name        = "trust_score"
+        type        = "enum"
+        index       = 1
+        annotations = {
+          displayName = "Trust Score"
+          description = "The overall trust tier based on domain evaluation rule outcomes"
+        }
+        constraints = { required = false }
+        enumValues = [
+          { name = "high",    index = 1 },
+          { name = "medium",  index = 2 },
+          { name = "low",     index = 3 },
+          { name = "unknown", index = 4 }
+        ]
+      },
+      {
+        name        = "last_evaluated"
+        type        = "datetime"
+        index       = 2
+        annotations = {
+          displayName = "Last Evaluated"
+          description = "The exact timestamp when the data quality scan was executed."
+        }
+        constraints = { required = false }
+      }
+    ]
+  })
 }
 
-module "dq_scan_raw" {
-  source           = "../../custom_modules/dataplex_datascan/data-quality"
-  project_id       = var.project_id
-  location         = var.location
-  data_scan_id     = "vz-raw-dq-daily"
-  display_name     = "VZ Raw - Daily Data Quality"
-  description      = "Automated daily DQ scan for vzdataset.raw"
-  labels           = merge(local.common_labels, { scan_type = "dq" })
-  source_bq_table  = "${local.bq_prefix}/datasets/vzdataset/tables/raw"
-  results_bq_table = local.dq_results_table
-  schedule_cron    = "0 6 * * *"
-  sampling_percent = 100.0
-  dq_rules = [
-    {
-      name              = "id-not-null"
-      dimension         = "COMPLETENESS"
-      threshold         = 1.0
-      column            = "id"
-      row_condition_sql = "id IS NOT NULL"
+# =============================================================================
+# ▼▼▼ CLIENT ENVIRONMENT — UPDATE THESE 3 CSV FILES IN GCS ▼▼▼
+# =============================================================================
+# GCS bucket: gs://vz-datacatalog/data/
+#
+# 1. profiling.csv        → which tables to DATA PROFILE
+# 2. custom_dq.csv        → which tables to create CUSTOM DQ scans
+# 3. profile_based_dq.csv → which tables to create PROFILE-BASED DQ scans
+#                           (fill AFTER profiling scan has SUCCEEDED)
+# =============================================================================
+
+data "google_storage_bucket_object_content" "profiling_csv" {
+  name   = "data/profiling.csv"
+  bucket = var.gcs_bucket_name
+}
+
+data "google_storage_bucket_object_content" "custom_dq_csv" {
+  name   = "data/custom_dq.csv"
+  bucket = var.gcs_bucket_name
+}
+
+data "google_storage_bucket_object_content" "profile_dq_csv" {
+  name   = "data/profile_based_dq.csv"
+  bucket = var.gcs_bucket_name
+}
+
+locals {
+  rule_library = merge(local.prebuilt_rules, local.custom_rules)
+
+  # ── profiling.csv → profiling scan per table ──────────────────────────────
+  profiling_raw = csvdecode(data.google_storage_bucket_object_content.profiling_csv.content)
+
+  profiling_to_scan = {
+    for row in local.profiling_raw :
+    row.table_key => {
+      project_id      = row.project_id
+      dataset         = row.dataset
+      table           = row.table
+      exclude_columns = lookup(row, "exclude_columns", "") == "" ? [] : [for f in split(";", lookup(row, "exclude_columns", "")) : trimspace(f)]
     }
-  ]
-  depends_on = [module.dataplex_iam]
+  }
+
+  # ── custom_dq.csv → custom DQ scan per table ─────────────────────────────
+  custom_dq_raw = csvdecode(data.google_storage_bucket_object_content.custom_dq_csv.content)
+
+  custom_dq_to_scan = {
+    for row in local.custom_dq_raw :
+    row.table_key => {
+      project_id = row.project_id
+      dataset    = row.dataset
+      table      = row.table
+      dq_rules = row.dq_rules == "" ? [] : [
+        for rule_name in split(";", row.dq_rules) : local.rule_library[trimspace(rule_name)]
+      ]
+    }
+  }
+
+  # ── profile_based_dq.csv → profile-based DQ scan per table ───────────────
+  # Scan IDs are AUTO-BUILT from dataset + table — no hardcoding needed
+  profile_dq_raw = csvdecode(data.google_storage_bucket_object_content.profile_dq_csv.content)
+
+  profile_based_scans = {
+    for row in local.profile_dq_raw :
+    row.table => {
+      project_id               = row.project_id
+      region                   = var.region
+      dataset_id               = row.dataset
+      table_id                 = row.table
+      existing_profile_scan_id = "${replace(row.dataset, "_", "-")}-${replace(row.table, "_", "-")}-data-profile-scan"
+    }
+  }
 }
+
+# =============================================================================
+# PROFILING SCANS  (driven by profiling.csv)
+# =============================================================================
+
+module "profiling_scan" {
+  for_each         = local.profiling_to_scan
+  source           = "../../custom_modules/dataplex_datascan/data-profiling"
+  project_id       = each.value.project_id
+  location         = var.location
+  data_scan_id     = "${replace(each.value.dataset, "_", "-")}-${replace(each.value.table, "_", "-")}-data-profile-scan"
+  display_name     = "${each.value.project_id} - ${each.value.dataset} - ${title(replace(each.value.table, "_", " "))} - Data Profile"
+  description      = "Automated daily profiling scan for ${each.value.dataset}.${each.value.table}"
+  labels           = merge(local.common_labels, { scan_type = "profiling" })
+  source_bq_table  = "//bigquery.googleapis.com/projects/${each.value.project_id}/datasets/${each.value.dataset}/tables/${each.value.table}"
+  results_bq_table = local.profile_results_table
+  schedule_cron    = null
+  sampling_percent = 100.0
+  exclude_columns  = each.value.exclude_columns
+}
+
+# =============================================================================
+# CUSTOM DQ SCANS  (driven by custom_dq.csv)
+# =============================================================================
+
+module "dq_scan" {
+  for_each         = local.custom_dq_to_scan
+  source           = "../../custom_modules/dataplex_datascan/data-quality"
+  project_id       = each.value.project_id
+  location         = var.location
+  data_scan_id     = "${replace(each.value.dataset, "_", "-")}-${replace(each.value.table, "_", "-")}-data-quality-scan"
+  display_name     = "${each.value.project_id} - ${each.value.dataset} - ${title(replace(each.value.table, "_", " "))} - Data Quality"
+  description      = "Automated daily DQ scan for ${each.value.dataset}.${each.value.table}"
+  labels           = merge(local.common_labels, { scan_type = "dq" })
+  source_bq_table  = "//bigquery.googleapis.com/projects/${each.value.project_id}/datasets/${each.value.dataset}/tables/${each.value.table}"
+  results_bq_table = local.dq_results_table
+  schedule_cron    = null
+  sampling_percent = 100.0
+  dq_rules         = each.value.dq_rules
+}
+
+# =============================================================================
+# PROFILE-BASED DQ SCANS  (driven by profile_based_dq.csv)
+# Run AFTER profiling scan has SUCCEEDED
+# =============================================================================
 
 data "google_client_config" "default" {}
 
 data "http" "profile_scan_details" {
-  for_each = var.dq_profile_scans
+  for_each = local.profile_based_scans
 
   url = "https://dataplex.googleapis.com/v1/projects/${each.value.project_id}/locations/${each.value.region}/dataScans/${each.value.existing_profile_scan_id}"
 
@@ -130,7 +245,7 @@ locals {
 }
 
 data "google_dataplex_data_quality_rules" "recommendations" {
-  for_each = var.dq_profile_scans
+  for_each = local.profile_based_scans
 
   project      = each.value.project_id
   location     = each.value.region
@@ -138,12 +253,12 @@ data "google_dataplex_data_quality_rules" "recommendations" {
 }
 
 resource "google_dataplex_datascan" "dq_from_profile" {
-  for_each = var.dq_profile_scans
+  for_each = local.profile_based_scans
 
   project      = each.value.project_id
   location     = each.value.region
-  data_scan_id = each.value.new_dq_scan_id
-  display_name = "DQ (Profile Recommendations) — ${each.value.existing_profile_scan_id}"
+  data_scan_id = "${replace(each.value.dataset_id, "_", "-")}-${replace(each.value.table_id, "_", "-")}-dq-rules-based-data-profile"
+  display_name = "${each.value.project_id} - ${each.value.dataset_id} - ${title(replace(each.value.table_id, "_", " "))} - DQ Rules Based Data Profile"
   labels       = merge(local.common_labels, { scan_type = "dq-profile-based" })
 
   data {
@@ -152,9 +267,7 @@ resource "google_dataplex_datascan" "dq_from_profile" {
 
   execution_spec {
     trigger {
-      schedule {
-        cron = "0 6 * * *"
-      }
+      on_demand {}
     }
   }
 
@@ -237,31 +350,10 @@ resource "google_dataplex_datascan" "dq_from_profile" {
       }
     }
   }
-
-  depends_on = [module.dataplex_iam]
 }
 
-module "sensitive_data_protection" {
-  source = "../../custom_modules/dataplex_sdp"
-
-  # ---------------------------------------------------------
-  # DETAILS YOU MUST UPDATE:
-  # ---------------------------------------------------------
-  
-  # 1. Update this to your actual GCP Project ID where BigQuery lives
-  project_id = var.project_id
-  
-  # 2. DLP Discovery Configs must be in the multi-region 'us' location — do not change this
-  location   = "us"
-  
-  # 3. (Optional) Customize the sensitive data types you want to find.
-  # If you don't include this block, it will use the default list from variables.tf
-  info_types = [
-    "EMAIL_ADDRESS",
-    "CREDIT_CARD_NUMBER",
-    "US_SOCIAL_SECURITY_NUMBER",
-    "PERSON_NAME",
-    "PHONE_NUMBER",
-    "GCP_CREDENTIALS"
-  ]
-}
+#module "sensitive_data_protection" {
+#  source     = "../../custom_modules/dataplex_sdp"
+#  project_id = var.project_id
+#  location   = "us"
+#}

@@ -25,29 +25,31 @@ variable "alert_emails" {
   default = []
 }
 
-# Map of profile-based DQ scans — add one entry per table to scale to 50 tables
-# existing_profile_scan_id = the profiling scan that already ran and generated recommendations
-# new_dq_scan_id           = the new DQ scan Terraform will create
-variable "dq_profile_scans" {
-  description = "Map of DQ scans to create from profile recommendations. Key = logical name."
-  type = map(object({
-    project_id               = string
-    region                   = string
-    existing_profile_scan_id = string
-    new_dq_scan_id           = string
-  }))
-  default = {}
-}
+# ── Cloud Run image tags ────────────────────────────────────────────────────
 
-# Cloud Run Aspect Patcher variables
-variable "aspect_patcher_image" {
-  description = "The full Docker image URI for the Cloud Run aspect patcher job (e.g. gcr.io/project/vz-aspect-patcher:latest)."
+variable "trust_score_tag" {
+  description = "Image tag for Trust Score"
   type        = string
-  default     = "python:3.11-slim"
+  default     = "latest"
 }
 
-variable "aspect_patcher_gcs_bucket" {
-  description = "The GCS bucket name where the vz_aspect_assignment.csv file is stored."
+variable "bulk_aspect_apply_tag" {
+  description = "Image tag for Bulk Aspect Apply"
+  type        = string
+  default     = "latest"
+}
+
+variable "profiler_cloud_run_tag" {
+  description = "Image tag for Profiler"
+  type        = string
+  default     = "latest"
+}
+
+# ── GCS bucket (holds all 3 CSV files) ─────────────────────────────────────
+# ▼▼▼ CLIENT ENV: set this to your GCS bucket name ▼▼▼
+
+variable "gcs_bucket_name" {
+  description = "GCS bucket that holds profiling.csv, custom_dq.csv, profile_based_dq.csv"
   type        = string
   default     = "vz-datacatalog"
 }

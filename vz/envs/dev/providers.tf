@@ -11,7 +11,7 @@ terraform {
     }
   }
   backend "gcs" {
-    bucket = "vz-datacatalog"
+    bucket = "aspect-application-poc-bucket"
     prefix = "vz/dataplex/dev"
   }
 }
@@ -21,3 +21,4 @@ provider "google" {
   region                      = var.region
   impersonate_service_account = var.terraform_sa
 }
+

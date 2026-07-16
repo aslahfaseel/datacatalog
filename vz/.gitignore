@@ -1,0 +1,47 @@
+# Internal documentation — not for GitHub (use README.md instead)
+Dataplex_Implementation_Presentation.md
+Terraform_Code_Explanation.md
+
+# IAM modules — permissions managed by security team via GCP Console, not Terraform
+custom_modules/dataplex_iam/
+custom_modules/iam_custom_roles/
+
+# Deprecated Composer DAGs — replaced by Cloud Run aspect_patcher pipeline
+scripts/composer/
+
+# Terraform state files — NEVER commit these (contain sensitive resource IDs)
+*.tfstate
+*.tfstate.backup
+*.tfstate.*.backup
+
+# Terraform provider binaries and modules cache
+.terraform/
+
+# Terraform lock file — managed locally, not needed in repo
+.terraform.lock.hcl
+
+# Sensitive variable files — use terraform.tfvars for environment-specific values
+# (terraform.tfvars is tracked in git — do NOT put raw passwords or secrets in it)
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Override files (local developer overrides)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Generated plan files — not meant to be shared
+*.tfplan
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python environments
+venv/
+.venv/
+__pycache__/
+*.pyc
