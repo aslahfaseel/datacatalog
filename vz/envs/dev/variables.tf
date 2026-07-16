@@ -25,6 +25,8 @@ variable "alert_emails" {
   default = []
 }
 
+# ── Cloud Run image tags ────────────────────────────────────────────────────
+
 variable "trust_score_tag" {
   description = "Image tag for Trust Score"
   type        = string
@@ -43,14 +45,11 @@ variable "profiler_cloud_run_tag" {
   default     = "latest"
 }
 
-variable "dq_profile_scans" {
-  description = "config mapping"
-  type        = any
-  default     = {}  
-}
+# ── GCS bucket (holds all 3 CSV files) ─────────────────────────────────────
+# ▼▼▼ CLIENT ENV: set this to your GCS bucket name ▼▼▼
 
-variable "aspect_patcher_gcs_bucket" {
-  description = "GCS bucket for bulk apply"
+variable "gcs_bucket_name" {
+  description = "GCS bucket that holds profiling.csv, custom_dq.csv, profile_based_dq.csv"
   type        = string
-   default     = "aspect-application-poc-bucket"
+  default     = "vz-datacatalog"
 }
