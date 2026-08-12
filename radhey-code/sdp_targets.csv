@@ -1,0 +1,2 @@
+target_level,project_id,dataset_id,table_id,schedule,job_name
+TABLE,dmgcp-del-181,tb_thelook_reporting,rpt_customer_360,,manual-audit

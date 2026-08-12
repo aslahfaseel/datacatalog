@@ -1,0 +1,4 @@
+project_id,template_id,display_name,description,region,info_type_category,name,regex_pattern
+dmgcp-del-181,core-pii-global,Global Core PII,Scans standard PII,global,BUILTIN,EMAIL_ADDRESS,
+dmgcp-del-181,core-pii-global,Global Core PII,Scans standard PII,global,CUSTOM,CUSTOM_HASH,"(?i)^[a-z0-9#]{1,10}$"
+my-prod-project,eu-finance-rules,EU Financial Rules,Scans EU data,europe-west1,BUILTIN,IBAN_CODE,

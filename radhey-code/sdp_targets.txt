@@ -1,0 +1,3 @@
+target_level,project_id,dataset_id,table_id,schedule
+TABLE,my-data-proj,finance,transactions,
+DATASET,my-data-proj,hr_data,,daily

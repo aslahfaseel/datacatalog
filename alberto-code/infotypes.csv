@@ -1,0 +1,5 @@
+"id","display_name","description","pattern"
+"custom-id","Custom ID","Matches military ID numbers identifiable to a person","^(?:[A-Za-z0-9_\-/*+ .]+|\s*)$"
+"corp-security-investigation","Law Protected Reports and other documents","Matches corporate security investigation reports content","(?s)^[\s\S]+$"
+"third-party-demographics","Third Party Attitude and Behavior Propensities and other demographics","Matches propensity or behavior communication tags","(?i)^[a-z0-9#]{1,10}$"
+"third-party-brand-propensities","Third Party Brand Propencities","Matches brand preference communication metrics","(?i)^[a-z0-9]{1,10}$"
