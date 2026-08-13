@@ -1,0 +1,4 @@
+project_id,template_id,display_name,description,region,info_type_category,name,regex_pattern
+vz-it-np-keiv-dev-dpev-0,custom-id,Custom ID,Matches military ID numbers identifiable to a person,us-central1,CUSTOM,CUSTOM_HASH,"^(?:[A-Za-z0-9_\-/*+ .]+|\s*)$"
+vz-it-np-keiv-dev-dpev-0,corp-security-investigation,Law Protected Reports and other documents,us-central1,CUSTOM,CUSTOM_IP_ADDRESS,"(?s)^[\s\S]+$"
+vz-it-np-keiv-dev-dpev-0,third-party-demographics,Third Party Attitude and Behavior Propensities and other demographics,Matches propensity or behavior communication tags,us-central1,CUSTOM,CUSTOM_EU_ID,"(?i)^[a-z0-9]{1,10}$"
