@@ -2,60 +2,43 @@ import csv
 import logging
 import os
 import re
-import sys
-from google.auth import default, impersonated_credentials
-from google.cloud import storage, dlp_v2, bigquery
+from google.cloud import dlp_v2, bigquery
 
 # ==========================================
 # Configuration & Setup
 # ==========================================
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Environment Variables injected by Cloud Run
-GCS_BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "vz-datacatalog")
+# Local CSV Configuration
 CSV_FILE_NAME = os.environ.get("CSV_FILE_NAME", "sdp_targets.csv")
-SDP_PROJECT_ID = os.environ.get("SDP_PROJECT_ID")
-DEFAULT_INSPECT_TEMPLATE = os.environ.get("INSPECT_TEMPLATE_NAME", "")
-TARGET_SERVICE_ACCOUNT = os.environ.get(
-    "TARGET_SERVICE_ACCOUNT",
-    "vz-datacatalog@dmgcp-del-181.iam.gserviceaccount.com"
-)
 
-# Results Destination Environment Variables
-RESULTS_PROJECT_ID = os.environ.get("RESULTS_PROJECT_ID")
+# Project Configuration (Hardcode your default projects here for local testing)
+SDP_PROJECT_ID = os.environ.get("SDP_PROJECT_ID", "dmgcp-del-181")
+DEFAULT_INSPECT_TEMPLATE = os.environ.get("INSPECT_TEMPLATE_NAME", "") 
+
+# Results Destination Configuration
+RESULTS_PROJECT_ID = os.environ.get("RESULTS_PROJECT_ID", "dmgcp-del-181")
 RESULTS_DATASET_ID = os.environ.get("RESULTS_DATASET_ID", "sdp_audit_logs")
 RESULTS_TABLE_ID = os.environ.get("RESULTS_TABLE_ID", "dlp_findings")
 
-# Configure Service Account Impersonation
-logging.info(f"Setting up credential impersonation for: {TARGET_SERVICE_ACCOUNT}")
-try:
-    source_credentials, _ = default(
-        scopes=["https://www.googleapis.com/auth/cloud-platform"]
-    )
-    creds = impersonated_credentials.Credentials(
-        source_credentials=source_credentials,
-        target_principal=TARGET_SERVICE_ACCOUNT,
-        target_scopes=["https://www.googleapis.com/auth/cloud-platform"],
-    )
-    logging.info("Successfully generated impersonated credentials.")
-except Exception as e:
-    logging.critical(f"Failed to generate impersonated credentials: {e}")
-    sys.exit(1)
-
-# Initialize GCP Clients with impersonated credentials
-storage_client = storage.Client(credentials=creds)
-bq_client = bigquery.Client(credentials=creds)
-dlp_client = dlp_v2.DlpServiceClient(credentials=creds)
+# Initialize GCP Clients (Storage client removed for local execution)
+# Explicitly passing project to avoid local environment initialization errors
+bq_client = bigquery.Client(project=SDP_PROJECT_ID)
+dlp_client = dlp_v2.DlpServiceClient()
 
 # ==========================================
 # Core Helper Functions
 # ==========================================
-def download_csv():
-    """Downloads the config CSV from GCS and parses it."""
-    bucket = storage_client.bucket(GCS_BUCKET_NAME)
-    blob = bucket.blob(CSV_FILE_NAME)
-    reader = csv.DictReader(blob.download_as_text().splitlines())
-    return [row for row in reader]
+def read_local_csv():
+    """Reads the config CSV directly from the local directory."""
+    logging.info(f"Reading configuration CSV from local file: {CSV_FILE_NAME}...")
+    try:
+        with open(CSV_FILE_NAME, mode='r', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+            return [row for row in reader]
+    except FileNotFoundError:
+        logging.error(f"Could not find '{CSV_FILE_NAME}'. Ensure it is in the same directory as this script.")
+        raise
 
 def resolve_tables(row):
     """Resolves projects or datasets into a list of specific BigQuery tables."""
@@ -84,7 +67,7 @@ def generate_safe_id(project, dataset, table, job_name):
     safe_id = re.sub(r'[^a-zA-Z0-9-]', '-', raw_id).lower()
     return safe_id[:64].strip('-')
 
-def format_template_name(template_input, project_id, location="us-central1"):
+def format_template_name(template_input, project_id, location="global"):
     """Formats template ID into a full GCP resource path using the specific location."""
     template_str = template_input.strip() if template_input else ""
     if not template_str:
@@ -98,7 +81,7 @@ def format_template_name(template_input, project_id, location="us-central1"):
     else:
         return f"projects/{project_id}/locations/{location}/inspectTemplates/{template_str}"
 
-def create_sdp_action(target_project, dataset_id, table_id, schedule=None, job_name="sdp", inspect_template="", location="us-central1"):
+def create_sdp_action(target_project, dataset_id, table_id, schedule=None, job_name="sdp", inspect_template="", location="global"):
     """Creates either an SDP Job (one-off) or a Job Trigger (scheduled) using an Inspect Template and dynamic Location."""
     # Parent region dynamically created from CSV input
     parent = f"projects/{SDP_PROJECT_ID}/locations/{location}"
@@ -137,9 +120,11 @@ def create_sdp_action(target_project, dataset_id, table_id, schedule=None, job_n
     if not schedule:
         # One-off Inspect Job
         job_config = {
-            "storage_config": storage_config, 
-            "inspect_template_name": template_resource_name,
-            "actions": actions
+            "inspect_job": {
+                "storage_config": storage_config, 
+                "inspect_template_name": template_resource_name,
+                "actions": actions
+            }
         }
         
         response = dlp_client.create_dlp_job(
@@ -175,10 +160,10 @@ def create_sdp_action(target_project, dataset_id, table_id, schedule=None, job_n
 # Main Execution Entrypoint
 # ==========================================
 def main():
-    logging.info("Starting SDP Automation Script...")
+    logging.info("Starting SDP Automation Script locally...")
     try:
-        configs = download_csv()
-        logging.info(f"Loaded {len(configs)} configurations from GCS.")
+        configs = read_local_csv()
+        logging.info(f"Loaded {len(configs)} configurations from local CSV.")
         
         for config in configs:
             target_tables = resolve_tables(config)
@@ -188,7 +173,7 @@ def main():
             # Extract location from CSV, default to 'global' if left empty
             location = config.get("location", "").strip()
             if not location:
-                location = "us-central1"
+                location = "global"
             
             job_name = config.get("job_name", "").strip()
             if not job_name:

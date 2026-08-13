@@ -1,114 +1,100 @@
 import csv
 import logging
 import os
-import sys
 from collections import defaultdict
-from google.auth import default, impersonated_credentials
 from google.cloud import storage, dlp_v2
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Environment Variables
+# Environment Variables configured in Cloud Run
 GCS_BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "vz-datacatalog")
 CSV_FILE_NAME = os.environ.get("CSV_FILE_NAME", "templates_config.csv")
-TARGET_SERVICE_ACCOUNT = os.environ.get(
-    "TARGET_SERVICE_ACCOUNT",
-    "vz-datacatalog@dmgcp-del-181.iam.gserviceaccount.com"
-)
 
-# Configure Service Account Impersonation
-logging.info(f"Setting up credential impersonation for: {TARGET_SERVICE_ACCOUNT}")
-try:
-    source_credentials, _ = default(
-        scopes=["https://www.googleapis.com/auth/cloud-platform"]
-    )
-    creds = impersonated_credentials.Credentials(
-        source_credentials=source_credentials,
-        target_principal=TARGET_SERVICE_ACCOUNT,
-        target_scopes=["https://www.googleapis.com/auth/cloud-platform"],
-    )
-    logging.info("Successfully generated impersonated credentials.")
-except Exception as e:
-    logging.critical(f"Failed to generate impersonated credentials: {e}")
-    sys.exit(1)
+# ==========================================
+# Hardcoded Built-in InfoTypes
+# ==========================================
+BUILTIN_INFO_TYPES = [
+    "CREDIT_CARD_NUMBER", "CVV_NUMBER", "PASSWORD", "CREDIT_CARD_TRACK_NUMBER",
+    "FINANCIAL_ACCOUNT_NUMBER", "US_SOCIAL_SECURITY_NUMBER", "DRIVERS_LICENSE_NUMBER",
+    "IMMIGRATION_STATUS", "US_INDIVIDUAL_TAXPAYER_IDENTIFICATION_NUMBER",
+    "DOD_ID_NUMBER", "PASSPORT", "MEDICAL_DATA", "GOVERNMENT_ID",
+    "US_EMPLOYER_IDENTIFICATION_NUMBER", "GENERIC_ID", "FEMALE_NAME",
+    "DATE_OF_BIRTH", "PHONE_NUMBER", "SECURITY_DATA", "DEMOGRAPHIC_DATA",
+    "EMAIL_ADDRESS", "LOCATION", "ADVERTISING_ID", "URL", "IP_ADDRESS",
+    "IMEI_HARDWARE_ID", "MAC_ADDRESS", "PERSON_NAME", "DOCUMENT_TYPE/R&D/SOURCE_CODE",
+    "DOCUMENT_TYPE/LEGAL/LAW", "DOCUMENT_TYPE/R&D/PATENT", "TECHNICAL_ID",
+    "DATE", "CREDIT_CARD_DATA", "STREET_ADDRESS", "LOCATION_COORDINATES",
+    "CRIME_STATUS", "OBJECT_TYPE/PERSON/PHOTO_ID_CARD", "POLITICAL_TERM",
+    "RELIGIOUS_TERM", "SEXUAL_ORIENTATION", "TRADE_UNION", "ETHNIC_GROUP",
+    "AGE", "EMPLOYMENT_STATUS", "VEHICLE_IDENTIFICATION_NUMBER"
+]
 
-# Initialize GCP Clients with impersonated credentials
-storage_client = storage.Client(credentials=creds)
-dlp_client = dlp_v2.DlpServiceClient(credentials=creds)
-
-def download_csv_from_gcs(bucket_name, file_name):
+def download_csv_from_gcs():
     """Downloads CSV content directly from Google Cloud Storage."""
-    logging.info(f"Downloading configuration CSV from gs://{bucket_name}/{file_name}...")
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(file_name)
+    logging.info(f"Downloading configuration CSV from gs://{GCS_BUCKET_NAME}/{CSV_FILE_NAME}...")
+    # Cloud Run automatically handles authentication via its attached Service Account
+    storage_client = storage.Client() 
+    bucket = storage_client.bucket(GCS_BUCKET_NAME)
+    blob = bucket.blob(CSV_FILE_NAME)
     
-    # Read text directly into memory
     content = blob.download_as_text()
     return content.splitlines()
 
 def create_inspect_templates_from_csv():
-    """Reads CSV from GCS and dynamically creates DLP Inspect Templates across projects."""
-    templates = defaultdict(lambda: {'built_in': [], 'custom': []})
-
+    """Reads a CSV for CUSTOM InfoTypes from GCS and merges them with hardcoded BUILTIN types."""
+    dlp_client = dlp_v2.DlpServiceClient()
+    templates = defaultdict(lambda: {'custom': []})
+    
     try:
-        csv_lines = download_csv_from_gcs(GCS_BUCKET_NAME, CSV_FILE_NAME)
+        csv_lines = download_csv_from_gcs()
         reader = csv.DictReader(csv_lines)
         
         for row in reader:
-            # Extract Target Project & Template Metadata
             project_id = row.get("project_id", "").strip()
             template_id = row.get("template_id", "").strip()
             display_name = row.get("display_name", "").strip()
             description = row.get("description", "").strip()
-            region = row.get("region", "global").strip() # Defaults to 'global'
+            region = row.get("region", "global").strip() 
             
-            # Extract InfoType Data
             category = row.get("info_type_category", "").strip().upper()
             name = row.get("name", "").strip()
             pattern = row.get("regex_pattern", "").strip()
 
-            # Skip invalid rows
             if not project_id or not template_id:
                 logging.warning("Skipping row: Missing project_id or template_id.")
                 continue 
 
-            # Group into the correct list based on category
-            if category == "BUILTIN":
-                templates[(project_id, template_id, display_name, description, region)]['built_in'].append({"name": name})
-            elif category == "CUSTOM":
+            if category == "CUSTOM" and name and pattern:
                 templates[(project_id, template_id, display_name, description, region)]['custom'].append({
                     "info_type": {"name": name},
                     "regex": {"pattern": pattern}
                 })
-            else:
-                logging.warning(f"Skipping unknown category '{category}' for InfoType: {name}")
+            elif category == "BUILTIN":
+                logging.info(f"Ignoring BUILTIN definition from CSV ({name}); using hardcoded list instead.")
                 
     except Exception as e:
-        logging.error(f"Failed to fetch or parse CSV from GCS bucket '{GCS_BUCKET_NAME}': {e}")
-        raise
+        logging.error(f"Failed to fetch or parse CSV from GCS: {e}")
+        return
 
     logging.info(f"Found {len(templates)} unique templates to create.")
+    formatted_builtins = [{"name": info_type} for info_type in BUILTIN_INFO_TYPES]
 
-    # Iterate over the grouped templates and push them to GCP
     for (project_id, template_id, display_name, description, region), infotypes in templates.items():
         parent = f"projects/{project_id}/locations/{region}"
         
-        # 1. Build the Inspect Config
         inspect_config = {
-            "info_types": infotypes['built_in'],
+            "info_types": formatted_builtins,
             "custom_info_types": infotypes['custom'],
             "min_likelihood": dlp_v2.Likelihood.LIKELY,
         }
 
-        # 2. Wrap it in a Template object
         inspect_template = {
             "display_name": display_name,
             "description": description,
             "inspect_config": inspect_config
         }
 
-        # 3. Create the template in GCP
         try:
             response = dlp_client.create_inspect_template(
                 request={
