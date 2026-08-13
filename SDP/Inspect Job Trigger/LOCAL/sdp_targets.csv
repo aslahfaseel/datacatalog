@@ -1,0 +1,3 @@
+target_level,project_id,dataset_id,table_id,schedule,job_name,inspect_template,location
+TABLE,vz-it-np-keiv-dev-dpev-0,tb_thelook_reporting,rpt_product_sales,,manual-scan,custom-id,global
+DATASET,vz-it-np-keiv-dev-dpev-0,hr_dataset,,daily,daily-hr-audit,corp-security-investigation,us-central1
