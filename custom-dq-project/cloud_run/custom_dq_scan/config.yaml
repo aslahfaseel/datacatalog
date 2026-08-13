@@ -1,0 +1,24 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Custom DQ Scan Cloud Run job configuration  —  Onix Environment
+# ──────────────────────────────────────────────────────────────────────────────
+
+# GCS bucket that stores the custom_dq.csv driver file
+gcs:
+  bucket_name: "vz-datacatalog"
+  csv_blob: "custom_dq.csv"          # path within the bucket
+
+# Dataplex / BigQuery settings
+dataplex:
+  default_location: "us-central1"
+  service_account_email: "vz-datacatalog@dmgcp-del-181.iam.gserviceaccount.com"
+
+  # Where DQ scan results are exported  (table must already exist in BQ)
+  results_bq_table: "//bigquery.googleapis.com/projects/dmgcp-del-181/datasets/vzdataset/tables/data_quality_results"
+
+  # Optional: stream execution audit rows here  (leave empty "" to skip)
+  audit_bq_table: ""
+
+# Optional: impersonate a target SA.
+# Set target_sa to "" to use the Cloud Run job's own attached SA.
+impersonation:
+  target_sa: ""

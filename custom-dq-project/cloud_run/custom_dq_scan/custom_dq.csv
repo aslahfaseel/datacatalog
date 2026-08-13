@@ -1,0 +1,3 @@
+project_id,location,dataset,table_name,rule_keys,status
+dmgcp-del-181,us-east4,vzdataset,raw_customer,uniqueness:order_id | non_null:order_date,
+dmgcp-del-181,us-east4,vzdataset,raw_customer,row_condition:salary > 0 | uniqueness:emp_id,
