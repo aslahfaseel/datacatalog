@@ -98,6 +98,9 @@ def parse_dynamic_rule(rule_str: str, index: int) -> dict:
     elif rule_type == "table_condition":
         rule_def["dimension"] = "COMPLETENESS"
         rule_def["sqlExpression"] = param
+    elif rule_type == "regex":
+        rule_def["dimension"] = "VALIDITY"
+        rule_def["regex"] = param
     else:
         raise ValueError(f"Unsupported dynamic rule type: '{rule_type}'.")
 
