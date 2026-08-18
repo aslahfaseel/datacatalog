@@ -1,3 +1,0 @@
-project_id,location,dataset,table_name,rule_keys,status
-dmgcp-del-181,us-central1,vzdataset,raw_customer,"uniqueness:customer_id | non_null:created_date",
-dmgcp-del-181,us-central1,vzdataset,raw_customer,"row_condition:customer_id IS NOT NULL | regex:email:^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$",

@@ -68,16 +68,86 @@ def upload_csv_to_gcs(bucket_name: str, blob_name: str, df: pd.DataFrame):
 # RULE LIBRARIES & PARSING
 # ──────────────────────────────────────────────────────────────────────────────
 RULE_LIBRARY: dict = {
-    "raw-table-has-data": {"name": "raw-table-has-data", "dimension": "COMPLETENESS", "type": "table_condition", "sqlExpression": "COUNT(*) > 0"},
-    "email-format-valid": {"name": "email-format-valid", "dimension": "VALIDITY", "column": "email", "type": "regex", "threshold": 0.99, "regex": r"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$"}
+    # ── BUILT-IN RULES (SYSTEM / STANDARD TEMPLATES) ───────────────────────
+    "raw-table-has-data": {
+        "name": "raw-table-has-data",
+        "dimension": "COMPLETENESS",
+        "type": "table_condition",
+        "sqlExpression": "COUNT(*) > 0"
+    },
+    "duplicate-check-primary-fields": {
+        "name": "duplicate-check-primary-fields",
+        "dimension": "UNIQUENESS",
+        "type": "uniqueness",
+        "threshold": 1.0
+    },
+    "record-count-anomaly": {
+        "name": "record-count-anomaly",
+        "dimension": "TIMELINESS",
+        "type": "table_condition",
+        "sqlExpression": "COUNT(*) >= 1"
+    },
+    "default-value-check": {
+        "name": "default-value-check",
+        "dimension": "ACCURACY",
+        "type": "row_condition",
+        "threshold": 0.95,
+        "sqlExpression": "is_valid_name = TRUE"
+    },
+
+    # ── CUSTOM DOMAIN & BUSINESS RULES ──────────────────────────────────────
+    "res-bus-ind-valid": {
+        "name": "res-bus-ind-valid",
+        "dimension": "VALIDITY",
+        "column": "res_bus_ind",
+        "type": "set_membership",
+        "threshold": 1.0,
+        "values": ["B", "C", "R"]
+    },
+    "amount-due-check": {
+        "name": "amount-due-check",
+        "dimension": "VALIDITY",
+        "column": "amount_due",
+        "type": "row_condition",
+        "threshold": 1.0,
+        "sqlExpression": "amount_due >= 0"
+    },
+    "email-format-valid": {
+        "name": "email-format-valid",
+        "dimension": "VALIDITY",
+        "column": "email_addr",
+        "type": "regex",
+        "threshold": 0.90,
+        "regex": r"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$"
+    },
+    "zipcode-format-valid": {
+        "name": "zipcode-format-valid",
+        "dimension": "VALIDITY",
+        "column": "zip5",
+        "type": "regex",
+        "threshold": 0.90,
+        "regex": r"^\d{5}$"
+    },
+    "cluster-size-check": {
+        "name": "cluster-size-check",
+        "dimension": "VALIDITY",
+        "type": "row_condition",
+        "threshold": 1.0,
+        "sqlExpression": "cluster_size >= 1 AND cluster_size < 200"
+    }
 }
 
 def parse_dynamic_rule(rule_str: str, index: int) -> dict:
-    rule_type, param = rule_str.split(":", 1)
-    rule_type = rule_type.strip().lower()
-    param = param.strip()
+    """Parses rule key strings into Dataplex DataQualityRule payloads."""
+    if ":" in rule_str:
+        rule_type, param = rule_str.split(":", 1)
+        rule_type = rule_type.strip().lower()
+        param = param.strip()
+    else:
+        rule_type = "row_condition"
+        param = rule_str.strip()
 
-    safe_param = re.sub(r'[^a-zA-Z0-9]', '-', param)[:20].strip('-').lower()
+    safe_param = re.sub(r'[^a-zA-Z0-9]', '-', param)[:25].strip('-').lower()
     rule_name = f"{rule_type.replace('_', '-')}-{safe_param}-{index}"
 
     rule_def = {
@@ -92,8 +162,9 @@ def parse_dynamic_rule(rule_str: str, index: int) -> dict:
     elif rule_type == "non_null":
         rule_def["dimension"] = "COMPLETENESS"
         rule_def["column"] = param
-    elif rule_type == "row_condition":
+    elif rule_type in ("row_condition", "custom_sql"):
         rule_def["dimension"] = "VALIDITY"
+        rule_def["type"] = "row_condition"
         rule_def["sqlExpression"] = param
     elif rule_type == "table_condition":
         rule_def["dimension"] = "COMPLETENESS"
@@ -102,16 +173,21 @@ def parse_dynamic_rule(rule_str: str, index: int) -> dict:
         rule_def["dimension"] = "VALIDITY"
         rule_def["regex"] = param
     else:
-        raise ValueError(f"Unsupported dynamic rule type: '{rule_type}'.")
+        # Generic fallback as row_condition
+        rule_def["dimension"] = "VALIDITY"
+        rule_def["type"] = "row_condition"
+        rule_def["sqlExpression"] = param
 
     return rule_def
 
 def build_rule_payload(rule: dict) -> dict:
+    """Constructs the JSON body expected by the Google Dataplex REST API."""
     rtype = rule.get("type", "")
-    payload: dict = {"name": rule["name"], "dimension": rule["dimension"]}
+    payload: dict = {"name": rule["name"], "dimension": rule.get("dimension", "VALIDITY")}
 
-    if rule.get("column"): payload["column"] = rule["column"]
-    
+    if rule.get("column"):
+        payload["column"] = rule["column"]
+
     if rtype not in ("table_condition", "sql_assertion"):
         payload["threshold"] = rule.get("threshold", 1.0)
 
@@ -125,8 +201,18 @@ def build_rule_payload(rule: dict) -> dict:
         payload["uniquenessExpectation"] = {}
     elif rtype == "regex":
         payload["regexExpectation"] = {"regex": rule.get("regex")}
+    elif rtype == "set_membership":
+        payload["setExpectation"] = {"values": rule.get("values", [])}
+    elif rtype == "range":
+        payload["rangeExpectation"] = {
+            "minValue": str(rule.get("min")),
+            "maxValue": str(rule.get("max")),
+            "strictMinEnabled": rule.get("strictMin", False),
+            "strictMaxEnabled": rule.get("strictMax", False)
+        }
     else:
-        raise ValueError(f"Unknown rule type '{rtype}'")
+        # Fallback to row condition
+        payload["rowConditionExpectation"] = {"sqlExpression": rule.get("sqlExpression", "1=1")}
 
     return payload
 
@@ -146,19 +232,19 @@ def _build_scan_body(row: dict, rules: list[dict], config: dict) -> tuple[str, d
     project_id = str(row["project_id"]).strip()
     dataset = str(row["dataset"]).strip()
     table_name = str(row["table_name"]).strip()
-    
+
     bq_resource = f"//bigquery.googleapis.com/projects/{project_id}/datasets/{dataset}/tables/{table_name}"
-    
-    # Format scan_id to strict Dataplex naming standard
+
+    # Format scan_id to strict Dataplex naming standards
     ds_clean = re.sub(r'[^a-z0-9-]', '-', dataset.lower())
     tbl_clean = re.sub(r'[^a-z0-9-]', '-', table_name.lower())
     scan_id = f"{ds_clean}-{tbl_clean}-custom-dq"[:63].rstrip('-')
-    
+
     display_name = f"{project_id} - {dataset} - {table_name.replace('_', ' ').title()} - custom dq scan"
-    
+
     schedule_cron = str(row.get("schedule_cron", "")).strip()
     trigger = {"schedule": {"cron": schedule_cron}} if schedule_cron and schedule_cron.lower() != "nan" else {"onDemand": {}}
-        
+
     try:
         sampling = float(str(row.get("sampling_percent", "100")).strip() or "100")
     except ValueError:
@@ -174,10 +260,10 @@ def _build_scan_body(row: dict, rules: list[dict], config: dict) -> tuple[str, d
         "rules": rules,
         "postScanActions": {"bigqueryExport": {"resultsTable": config["dataplex"]["results_bq_table"]}},
     }
-    
+
     if row_filter:
         dq_spec["rowFilter"] = row_filter
-        
+
     body = {
         "displayName": display_name,
         "description": f"Custom DQ scan for {dataset}.{table_name}",
@@ -202,11 +288,11 @@ def create_or_update_scan(project_id, location, scan_id, body, token) -> tuple[b
     else:
         params = {"dataScanId": scan_id}
         resp = http_requests.post(base_url, headers=headers, params=params, json=body)
-        
+
     if resp.status_code in (200, 201):
         logging.info(f"Successfully processed scan '{scan_id}' in location '{location}'")
         return True, "SUCCESS"
-    
+
     error_details = f"HTTP {resp.status_code}: {resp.text}"
     logging.error(f"Dataplex REST API Call Failed for scan '{scan_id}': {error_details}")
     return False, error_details
@@ -228,9 +314,9 @@ def main():
     credentials = get_credentials(config)
     gcs_conf = config["gcs"]
     audit_table = config["dataplex"].get("audit_bq_table", "")
-    
+
     bq_client = bigquery.Client(credentials=credentials) if audit_table else None
-    
+
     try:
         df = read_csv_from_gcs(gcs_conf["bucket_name"], gcs_conf["csv_blob"])
     except Exception as exc:
@@ -242,7 +328,7 @@ def main():
     if missing:
         logging.error(f"CSV missing required columns: {missing}")
         sys.exit(1)
-        
+
     audit_entries: list[dict] = []
     global_failed = False
 
@@ -258,25 +344,21 @@ def main():
             logging.warning(f"Row {row_num}: Missing required fields, skipping.")
             df.at[idx, "status"] = "SKIPPED: Missing fields"
             continue
-            
+
         if str(row.get("status", "")).strip().upper() in ("DONE", "SUCCESS"):
             logging.info(f"Row {row_num}: Already processed. Skipping.")
             continue
 
         rule_keys = [k.strip() for k in raw_keys.split("|") if k.strip()]
         resolved_rules = []
-        unknown_keys = []
 
         for i, key in enumerate(rule_keys):
             try:
-                if ":" in key:
-                    rule_def = parse_dynamic_rule(key, i)
-                    resolved_rules.append(build_rule_payload(rule_def))
-                elif key in RULE_LIBRARY:
+                if key in RULE_LIBRARY:
                     resolved_rules.append(build_rule_payload(RULE_LIBRARY[key]))
                 else:
-                    logging.warning(f"Row {row_num}: Rule '{key}' skipped.")
-                    unknown_keys.append(key)
+                    rule_def = parse_dynamic_rule(key, i)
+                    resolved_rules.append(build_rule_payload(rule_def))
             except Exception as exc:
                 logging.error(f"Row {row_num}: Error parsing rule '{key}': {exc}")
 
@@ -294,14 +376,12 @@ def main():
             df.at[idx, "status"] = f"FAILED: Body build error — {exc}"
             global_failed = True
             continue
-            
+
         ok, msg = create_or_update_scan(project_id, location, scan_id, body, token)
-        
+
         status_val = "DONE" if ok else f"FAILED: {msg[:100]}"
-        if unknown_keys and ok:
-            status_val = f"DONE (skipped unknown keys: {','.join(unknown_keys)})"
-            
         df.at[idx, "status"] = status_val
+
         if not ok:
             logging.error(f"Row {row_num} [Table: {dataset}.{table_name}] execution failed.")
             global_failed = True
@@ -318,7 +398,7 @@ def main():
         })
 
     upload_csv_to_gcs(gcs_conf["bucket_name"], gcs_conf["csv_blob"], df)
-    
+
     if bq_client and audit_entries:
         log_to_bigquery(bq_client, audit_table, audit_entries)
 
@@ -333,4 +413,3 @@ if __name__ == "__main__":
     except Exception as err:
         logging.error(f"Execution Error: {err}")
         sys.exit(1)
-        
