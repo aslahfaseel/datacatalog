@@ -1,0 +1,3 @@
+project_id,location,dataset,table_name,rule_keys,status
+dmgcp-del-181,us-central1,vzdataset,raw_customer,non_null:acct_id | non_null:locus_id | non_null:email_addr | raw-table-has-data | row_condition:record_count_by_res_bus_ind | non_null:src | uniqueness:acct_id | row_condition:Valid res_bus_ind,
+dmgcp-del-181,us-central1,vzdataset,raw_customer,non_null:bill_date | non_null:acct_id | non_null:bill_id | row_condition:amount_due_check | non_null:amount_due | raw-table-has-data,
