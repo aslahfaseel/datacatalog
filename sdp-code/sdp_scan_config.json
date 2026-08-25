@@ -1,0 +1,100 @@
+﻿{
+  "apiVersion": "run.googleapis.com/v1",
+  "kind": "Job",
+  "metadata": {
+    "annotations": {
+      "run.googleapis.com/client-name": "cloud-console",
+      "run.googleapis.com/creator": "aslahfaseel.k@onixnet.com",
+      "run.googleapis.com/lastModifier": "aslahfaseel.k@onixnet.com",
+      "run.googleapis.com/operation-id": "806b9f66-390c-442e-b425-b2e3eb037300"
+    },
+    "creationTimestamp": "2026-08-10T09:36:59.506614Z",
+    "generation": 18,
+    "labels": {
+      "cloud.googleapis.com/location": "us-central1",
+      "run.googleapis.com/lastUpdatedTime": "2026-08-12T11:48:03.284350Z"
+    },
+    "name": "sdp-scan",
+    "namespace": "308053638624",
+    "resourceVersion": "AAZY2FiTyqM",
+    "selfLink": "/apis/run.googleapis.com/v1/namespaces/308053638624/jobs/sdp-scan",
+    "uid": "7e5d1903-12b2-4c56-90a7-6e9a23fa58f9"
+  },
+  "spec": {
+    "template": {
+      "metadata": {
+        "annotations": {
+          "run.googleapis.com/client-name": "cloud-console",
+          "run.googleapis.com/execution-environment": "gen2"
+        },
+        "labels": {
+          "client.knative.dev/nonce": "xor_vog_gip"
+        }
+      },
+      "spec": {
+        "taskCount": 1,
+        "template": {
+          "spec": {
+            "containers": [
+              {
+                "env": [
+                  {
+                    "name": "GCS_BUCKET_NAME",
+                    "value": "vz-datacatalog"
+                  },
+                  {
+                    "name": "CSV_FILE_NAME",
+                    "value": "sdp_targets.csv"
+                  },
+                  {
+                    "name": "SDP_PROJECT_ID",
+                    "value": "dmgcp-del-181"
+                  },
+                  {
+                    "name": "RESULTS_PROJECT_ID",
+                    "value": "dmgcp-del-181"
+                  },
+                  {
+                    "name": "RESULTS_DATASET_ID",
+                    "value": "vzdataset"
+                  },
+                  {
+                    "name": "RESULTS_TABLE_ID",
+                    "value": "dlp_findings"
+                  }
+                ],
+                "image": "us-central1-docker.pkg.dev/dmgcp-del-181/cloud-run-source-deploy/sdp-inspect@sha256:0c27a3eb6a6964a815c7c308360f59c40ca1b1ef6ee12e0833f7a0c24b288a43",
+                "name": "sdp-scan-1",
+                "resources": {
+                  "limits": {
+                    "cpu": "1000m",
+                    "memory": "512Mi"
+                  }
+                }
+              }
+            ],
+            "maxRetries": 3,
+            "serviceAccountName": "vz-datacatalog@dmgcp-del-181.iam.gserviceaccount.com",
+            "timeoutSeconds": "600"
+          }
+        }
+      }
+    }
+  },
+  "status": {
+    "conditions": [
+      {
+        "status": "True",
+        "type": "Ready"
+      }
+    ],
+    "executionCount": 21,
+    "latestCreatedExecution": {
+      "completionStatus": "EXECUTION_SUCCEEDED",
+      "completionTimestamp": "2026-08-12T12:01:16.522770Z",
+      "creationTimestamp": "2026-08-12T11:59:23.279459Z",
+      "name": "sdp-scan-bv75m"
+    },
+    "observedGeneration": 18
+  }
+}

@@ -1,0 +1,3 @@
+project_id,location,dataset_id,table_id,column_name,rule_ids
+dmgcp-del-181,us-central1,vzdataset_data,raw_customer,email,rule-global-null-check-template
+dmgcp-del-181,us-central1,vzdataset_data,raw_customer,status,rule-status-check-template

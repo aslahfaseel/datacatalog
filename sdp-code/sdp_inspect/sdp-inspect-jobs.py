@@ -134,10 +134,28 @@ def create_sdp_action(target_project, dataset_id, table_id, schedule=None, job_n
         }
     ]
 
+    # Configure inspect template to include quotes if requested
+    storage_config = {
+        "big_query_options": {
+            "table_reference": {
+                "project_id": target_project,
+                "dataset_id": dataset_id,
+                "table_id": table_id,
+            }
+        }
+    }
+    
+    inspect_config = {
+        "exclude_info_types": False,
+        "include_quote": True,
+        "min_likelihood": dlp_v2.Likelihood.LIKELY
+    }
+
     if not schedule:
         # One-off Inspect Job
         job_config = {
             "storage_config": storage_config, 
+            "inspect_config": inspect_config,
             "inspect_template_name": template_resource_name,
             "actions": actions
         }

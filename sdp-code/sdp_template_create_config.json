@@ -1,0 +1,81 @@
+﻿{
+  "apiVersion": "run.googleapis.com/v1",
+  "kind": "Job",
+  "metadata": {
+    "annotations": {
+      "run.googleapis.com/client-name": "cloud-console",
+      "run.googleapis.com/creator": "radhey.sham@onixnet.us",
+      "run.googleapis.com/lastModifier": "radhey.sham@onixnet.us",
+      "run.googleapis.com/operation-id": "75f66068-9943-45f9-9046-7a8873aec721"
+    },
+    "creationTimestamp": "2026-08-12T11:24:25.508965Z",
+    "generation": 3,
+    "labels": {
+      "cloud.googleapis.com/location": "us-central1",
+      "run.googleapis.com/lastUpdatedTime": "2026-08-12T11:27:15.731063Z"
+    },
+    "name": "sdp-template-create",
+    "namespace": "308053638624",
+    "resourceVersion": "AAZY2F5X2vE",
+    "selfLink": "/apis/run.googleapis.com/v1/namespaces/308053638624/jobs/sdp-template-create",
+    "uid": "6d119d59-c72c-45af-a94f-d029a95b99a3"
+  },
+  "spec": {
+    "template": {
+      "metadata": {
+        "annotations": {
+          "run.googleapis.com/client-name": "cloud-console",
+          "run.googleapis.com/execution-environment": "gen2"
+        }
+      },
+      "spec": {
+        "taskCount": 1,
+        "template": {
+          "spec": {
+            "containers": [
+              {
+                "env": [
+                  {
+                    "name": "GCS_BUCKET_NAME",
+                    "value": "vz-datacatalog"
+                  },
+                  {
+                    "name": "CSV_FILE_NAME",
+                    "value": "templates_config.csv"
+                  }
+                ],
+                "image": "us-central1-docker.pkg.dev/dmgcp-del-181/cloud-run-source-deploy/sdp-template@sha256:e5d2cfe3fa85a48ae4549fccf517792cf151d9d3b37687cd4042d9d79f81e6c6",
+                "name": "sdp-template-1",
+                "resources": {
+                  "limits": {
+                    "cpu": "1000m",
+                    "memory": "512Mi"
+                  }
+                }
+              }
+            ],
+            "maxRetries": 3,
+            "serviceAccountName": "308053638624-compute@developer.gserviceaccount.com",
+            "timeoutSeconds": "600"
+          }
+        }
+      }
+    }
+  },
+  "status": {
+    "conditions": [
+      {
+        "status": "True",
+        "type": "Ready"
+      }
+    ],
+    "executionCount": 5,
+    "latestCreatedExecution": {
+      "completionStatus": "EXECUTION_SUCCEEDED",
+      "completionTimestamp": "2026-08-12T12:02:58.423284Z",
+      "creationTimestamp": "2026-08-12T12:00:11.765360Z",
+      "name": "sdp-template-create-scl8n"
+    },
+    "observedGeneration": 3
+  }
+}

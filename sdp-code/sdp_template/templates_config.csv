@@ -1,0 +1,32 @@
+project_id,template_id,display_name,description,region,info_type_category,name,regex_pattern
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,BUILTIN,EMAIL_ADDRESS,
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,BUILTIN,PHONE_NUMBER,
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,BUILTIN,US_SOCIAL_SECURITY_NUMBER,
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,BUILTIN,CREDIT_CARD_NUMBER,
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,BUILTIN,PERSON_NAME,
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,BUILTIN,DATE_OF_BIRTH,
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,BUILTIN,STREET_ADDRESS,
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,BUILTIN,IP_ADDRESS,
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,BUILTIN,MAC_ADDRESS,
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,BUILTIN,IMEI_HARDWARE_ID,
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,BUILTIN,PASSPORT,
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,BUILTIN,DRIVERS_LICENSE_NUMBER,
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,BUILTIN,FINANCIAL_ACCOUNT_NUMBER,
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,BUILTIN,VEHICLE_IDENTIFICATION_NUMBER,
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,BUILTIN,AGE,
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,CUSTOM,CUSTOM_ANY_TEXT_MULTILINE,"(?s)^[\s\S]+$"
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,CUSTOM,CUSTOM_ALPHANUM_BASIC,"^([A-Za-z0-9*]+|\s*)$"
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,CUSTOM,CUSTOM_IP_ADDRESS_EXTENDED,"\b(?:(?:\d{1,3}\.){3}\d{1,3}|(?:[a-fA-F0-9]{1,4}:){1,7}(?::|[a-fA-F0-9]{1,4})?|(?:::[a-fA-F0-9]{1,4}))\b"
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,CUSTOM,CUSTOM_IDENTIFIER_SHORT,"^([A-Za-z0-9-+=*@|. _/]{1,50}|\s*)$"
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,CUSTOM,CUSTOM_ALPHANUM_DASH_AMP,"^([A-Za-z0-9\-*&| _]+|\s*)$"
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,CUSTOM,CUSTOM_HEX_OR_DIGITS,"^(\d{4,6}|[A-Fa-f0-9]{16}|[A-Fa-f0-9]{32})$"
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,CUSTOM,CUSTOM_PRINTABLE_TEXT,"^[^\x00-\x08\x0B\x0C\x0E-\x1F\x7F]{1,500}$"
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,CUSTOM,CUSTOM_PHONE_FORMAT,"^(\+?\d{1,3})?[\s./-]?\(?\d{1,4}\)?[\s./-]?\d{1,4}[\s./-]?\d{1,9}(.*)?$"
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,CUSTOM,CUSTOM_CASE_INSENSITIVE_HASH,"(?i)^[a-z0-9#]{1,10}$"
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,CUSTOM,CUSTOM_CASE_INSENSITIVE_ALPHANUM,"(?i)^[a-z0-9]{1,10}$"
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,CUSTOM,CUSTOM_ALPHANUM_SYMBOLS,"^(?:[A-Za-z0-9_\-/*+ .]+|\s*)$"
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,CUSTOM,CUSTOM_SSN_OR_ACCOUNT,"^(?:\d{9}|\d{3}-\d{2}-\d{4}|\d{4}|[A-Za-z]\d{9})$"
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,CUSTOM,CUSTOM_EMAIL_PATTERN,"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\s*$"
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,CUSTOM,CUSTOM_DATE_FORMAT,"^(?:\d{4}-\d{2}-\d{2}(?:\s\d{2}:\d{2}:\d{2})?|\d{2}\/\d{2}\/\d{4}(?:\s\d{2}:\d{2}:\d{2})?)$"
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,CUSTOM,CUSTOM_MAC_ADDRESS,"^(?:(?:[0-9A-Fa-f]{2}[:.-]?){5}[0-9A-Fa-f]{2}|(?:[0-9A-Fa-f]{4}\.){2}[0-9A-Fa-f]{4})$"
+dmgcp-del-181,sdp-core-pii-template,SDP Core PII Template,Scans for standard PII and custom data patterns across Verizon datasets,us-central1,CUSTOM,CUSTOM_ZIPCODE,"^(\d{9}|\d{5}-\d{4})$"

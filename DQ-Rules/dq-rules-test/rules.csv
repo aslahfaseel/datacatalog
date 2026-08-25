@@ -1,0 +1,4 @@
+rule_id,rule_type,dimension,description,expression
+no_null_customer_id,NOT_NULL,COMPLETENESS,Ensures customer ID is never null,
+valid_transaction_amount,RANGE,VALIDITY,Transaction amount must be positive,amount > 0
+valid_email_format,REGEX,VALIDITY,Ensures valid email pattern,^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+$

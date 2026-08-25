@@ -1,0 +1,3 @@
+target_level,project_id,dataset_id,table_id,schedule,job_name,inspect_template,location
+TABLE,dmgcp-del-181,vzdataset,raw_order,,sdp-test-scan-2,sdp-core-pii-template,us-central1
+TABLE,dmgcp-del-181,vzdataset,raw_customer,,sdp-test-scan-2,sdp-core-pii-template,us-central1

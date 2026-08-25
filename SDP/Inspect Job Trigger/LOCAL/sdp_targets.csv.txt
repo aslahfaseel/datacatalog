@@ -1,3 +1,0 @@
-target_level,project_id,dataset_id,table_id,schedule,job_name,inspect_template,location
-TABLE,dmgcp-del-181,tb_thelook_reporting,rpt_product_sales,,manual-scan,enterprise-sdp-template,global
-DATASET,dmgcp-del-181,hr_dataset,,daily,daily-hr-audit,hr-pii-template,us-central1
